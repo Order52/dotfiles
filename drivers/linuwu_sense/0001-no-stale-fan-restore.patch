@@ -1,0 +1,17 @@
+--- a/src/linuwu_sense.c
++++ b/src/linuwu_sense.c
+@@ -3339,8 +3339,12 @@
+      if (err)
+          return err;
+  
+-     acpi_status status = acer_set_fan_speed(value == 0 ? current_states.battery_state.cpu_fan_speed : current_states.ac_state.cpu_fan_speed, 
+-                                 value == 0 ? current_states.battery_state.gpu_fan_speed : current_states.ac_state.gpu_fan_speed);
++     /*
++      * Local patch: do not restore remembered manual fan speeds. They are stale after a reboot or a plug/unplug
++      * (the fans would jump to an old 35-100 % for no reason), and a userspace fan controller owns the fans anyway.
++      * Always start from firmware Auto (quiet, 0 rpm when cool); the thermal profile is still restored.
++      */
++     acpi_status status = acer_set_fan_speed(0, 0);
+      if(ACPI_FAILURE(status)){
+          return AE_ERROR;
+      } 

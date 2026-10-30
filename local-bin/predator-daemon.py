@@ -127,6 +127,8 @@ class Brain:
         self.busy_hold = 0
         self.activity = "idle"
         self.last_target = None
+        self.last_try = 0
+        self.last_ac = None
         self.cap = CAP_MAX
         self.cap_changed = 0
         self.cpus = sorted(glob.glob("/sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_max_freq"))
@@ -301,8 +303,11 @@ class Brain:
         else:
             target = "balanced" if ac else "low-power"
         cur = rd(PROFILE)
-        if cur and cur != target and target != self.last_target:
+        # retry if something else changed the profile (the driver restores a saved one on every plug/unplug),
+        # but only every 30 s per target so a profile the firmware refuses doesn't spam
+        if cur and cur != target and (target != self.last_target or self.tick - self.last_try >= 30):
             self.last_target = target
+            self.last_try = self.tick
             wr(PROFILE, target)
             names = {"performance": "Performance", "balanced": "Balanced", "low-power": "Eco"}
             why = self.activity if busy else ("on power" if ac else "on battery")
@@ -372,6 +377,12 @@ class Brain:
             self.tchassis = ema(self.tchassis, ec3 / 1000, 0.2)
         self.activity = self.classify()
 
+        ac = self.on_ac()
+        if self.last_ac is not None and ac != self.last_ac:
+            self.written = None                   # plug/unplug: the driver just reset the fans/profile, reassert now
+            self.last_target = None
+            self.cap_changed = self.tick
+        self.last_ac = ac
         mode = "manual" if rd(FANMODE) == "manual" else "smart"
         if mode == "smart":
             self.smart_fan()
