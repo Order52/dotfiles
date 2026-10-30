@@ -1,6 +1,7 @@
 -- Keyboard RGB (Acer PH16-71, rgbkb). Shows the saved effect; click opens the RGB panel.
 -- Middle click: random effect · IPC: noctalia msg plugin sloppy/toggles:rgb all <apply|random|off|set> [effect] [HEX]
 local CONFIG = noctalia.expandPath("~/.config/rgbkb/config.json")
+local REAR   = noctalia.expandPath("~/.config/rgbkb/rear.json")
 local PANEL  = "sloppy/toggles:rgb_panel"
 local NAMES  = { wave = "Wave", neon = "Neon", all = "Solid", breathe = "Breathe", ripple = "Ripple", snake = "Snake",
                  heartbeat = "Pulse", snow = "Snow", fireball = "Fire", stars = "Stars", spot = "Spot",
@@ -19,9 +20,15 @@ function update()
   barWidget.setText(effect and (NAMES[effect] or effect) or "RGB")
   barWidget.setColor("on_surface_variant")
   barWidget.setGlyphColor("tertiary")
+  local rear = noctalia.readFile(REAR) or ""
+  local rearText = "not set"
+  if rear ~= "" then
+    rearText = rear:match('"off"%s*:%s*true') and "off" or (rear:match('"effect"%s*:%s*"(%w+)"') or "?")
+  end
   barWidget.setTooltip({
     { "Keyboard RGB", effect and (NAMES[effect] or effect) or "not set" },
     { "Color", hex and ("#" .. hex:upper()) or "-" },
+    { "Rear light", rearText },
     { "Click", "RGB panel" }, { "Scroll", "brightness" }, { "Middle click", "random effect" } })
 end
 

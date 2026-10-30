@@ -1,0 +1,2 @@
+# Rear light / power-mode interface of the acer_rear_wmi module: let the plugdev group use /dev/acer-rear
+SUBSYSTEM=="misc", KERNEL=="acer-rear", GROUP="plugdev", MODE="0660"

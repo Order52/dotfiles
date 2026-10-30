@@ -11,6 +11,31 @@ The bar has a **keyboard button** (shows the current effect, e.g. "Wave"). **Cli
 screen under "Custom color…", with Back / Done), speed, brightness, wave direction, **Random / Reapply**, and a backlight-off button. Every change is applied instantly and saved. **Middle-click**
 the button for a random effect, and **scroll** on it to change the keyboard brightness (0–32, with an on-screen readout). (Plugin: `local-share/noctalia-plugins/toggles/rgb.luau` + `rgb_panel.luau`.)
 
+## Rear light
+
+The rear light of the laptop is **not** on the keyboard's USB device: it is driven through ACPI WMI by the small `acer_rear_wmi` kernel module
+(`drivers/acer-rear-wmi`, details in [rear-rgb-wmi.md](rear-rgb-wmi.md)). In the RGB panel, the **Rear light** tab (next to *Keyboard*) has
+presets, the effects Static / Breathe / Neon / Wave / Twinkle, colours (with the full picker and **Match keyboard**), speed 1–5 and brightness 0–100 %,
+plus an on/off button. The bar button's tooltip shows the rear state too.
+
+```bash
+acer-rear set breathing 3723C7 --speed 3 --level 100     # static breathing neon wave twinkling
+acer-rear color FF0000 | speed 4 | level 50              # change one thing
+acer-rear off | on | toggle                              # off = brightness 0; `on` restores the saved effect
+acer-rear status                                         # saved state + what the firmware reports
+```
+
+The state is saved in `~/.config/rgbkb/rear.json`. **Hyprland turns the rear light off at login** (`acer-rear off --wait` in `autostart.lua`);
+turn it on from the panel or with `acer-rear on`. If `/dev/acer-rear` is missing the module is not loaded (`sudo modprobe acer_rear_wmi`, or re-run `./install.sh`).
+
+## Backlight off after 30 seconds
+
+The keyboard can switch its backlight off after 30 s of inactivity (like PredatorSense's option). In the panel's *Keyboard* tab: **Backlight off after 30 s idle**.
+From a terminal: `kbd-backlight-timeout on | off | toggle | get`. It is a feature report on the keyboard's HID interface 3, sent through `hidraw`
+(no USB detach, so the keyboard does not reconnect); every write is verified by reading the flag back. The keyboard forgets the flag at power-up
+(it answers a query with an empty reply until it was set once), so the choice is saved in `~/.config/rgbkb/idle-off` and re-sent at login (`kbd-backlight-timeout apply` in `autostart.lua`).
+Protocol details are in [rear-rgb-wmi.md](rear-rgb-wmi.md). Not timed with a stopwatch yet: switch it on, leave the keyboard alone for 30 s and watch the backlight.
+
 ## Keyboard brightness keys
 
 **Fn+F11 / Fn+F12** are handled by the keyboard's own firmware (it changes the backlight by itself and tells the computer nothing useful),
@@ -61,6 +86,8 @@ Effects: `wave`, `neon` (no color) · `all`, `breathe`, `ripple`, `snake`, `hear
 | Saved effect | `config/rgbkb/config.json` → `~/.config/rgbkb/config.json` |
 | Applied at login | `config/hypr/config/autostart.lua` runs `rgbkb apply`, i.e. whatever you chose last (panel, `kbd-rgb` or the menu) |
 | USB permission | `system/etc/udev/rules.d/99-rgbkb.rules` (lets your user talk to the keyboard without root) |
+| 30 s backlight timeout | `local-bin/kbd-backlight-timeout`, flag saved in `~/.config/rgbkb/idle-off` |
+| Rear light | `drivers/acer-rear-wmi` (module), `local-bin/acer-rear` (tool), `~/.config/rgbkb/rear.json` (state), `system/etc/udev/rules.d/99-acer-rear.rules` |
 | Original upstream | <https://github.com/fuho/rgbkb> |
 
 The menu can also write a systemd user service (`~/.config/systemd/user/rgbkb-startup.service`) that applies your saved effect at login.

@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+"""kbd-backlight-timeout — the Acer keyboard's "turn the backlight off after 30 seconds of inactivity" flag (PH16-71, keyboard 04f2:0117).
+
+  kbd-backlight-timeout get | on | off | toggle | apply
+  (add --wait to retry for a few seconds while the keyboard's interface is busy, e.g. at login)
+
+It is a feature report on the keyboard's HID interface 3, sent through hidraw (no driver detach, so the keyboard does not reconnect):
+  set   30 01 <flag> 00 00 00 00 <chk>        flag 1 = off after 30 s, 0 = stay on;  chk = 0xFF - sum(first 7 bytes)
+  query b0 00 00 00 00 00 00 4f, then read the report back: b0 01 <flag> ... (retried if it does not start with b0)
+`get` also saves the flag to ~/.config/rgbkb/idle-off (what the Noctalia panel shows); `apply` re-sends that saved value (run at login).
+Found by reverse-engineering PredatorSense on Windows; see docs/rear-rgb-wmi.md.
+"""
+import fcntl, os, sys, time
+from pathlib import Path
+
+VID, PID, IFACE = "04f2", "0117", "03"
+SAVED = Path.home() / ".config/rgbkb/idle-off"
+
+
+def _ioc(nr, size):                       # _IOC(_IOC_READ | _IOC_WRITE, 'H', nr, size)
+    return (3 << 30) | (size << 16) | (ord("H") << 8) | nr
+
+
+HIDIOCSFEATURE = lambda n: _ioc(0x06, n)
+HIDIOCGFEATURE = lambda n: _ioc(0x07, n)
+
+
+def die(msg):
+    print(f"kbd-backlight-timeout: {msg}", file=sys.stderr)
+    sys.exit(1)
+
+
+def find_hidraw():
+    """/dev/hidrawN of the keyboard's interface 3 (usbhid binds it; rgbkb detaches it for a moment while it sends)."""
+    for h in sorted(Path("/sys/class/hidraw").glob("hidraw*")):
+        hid = (h / "device").resolve()                     # .../1-7:1.3/0003:04F2:0117.0008
+        iface = hid.parent                                 # .../1-7:1.3
+        try:
+            if (iface / "bInterfaceNumber").read_text().strip() == IFACE and \
+               (iface.parent / "idVendor").read_text().strip() == VID and (iface.parent / "idProduct").read_text().strip() == PID:
+                return f"/dev/{h.name}"
+        except OSError:
+            continue
+    return None
+
+
+def checksum(b7):
+    return (0xFF - sum(b7)) & 0xFF
+
+
+def with_device(fn, wait):
+    end = time.monotonic() + (8 if wait else 0)
+    while True:
+        path = find_hidraw()
+        if path:
+            try:
+                fd = os.open(path, os.O_RDWR)
+                try:
+                    return fn(fd)
+                finally:
+                    os.close(fd)
+            except OSError as e:
+                if time.monotonic() >= end:
+                    die(f"{path}: {e.strerror}")
+        elif time.monotonic() >= end:
+            die("keyboard interface 3 not found (is the keyboard 04f2:0117 connected, or is rgbkb holding it? try --wait)")
+        time.sleep(0.3)
+
+
+def read_flag(fd):
+    """0 / 1, or None while the keyboard has not been given a value since power-up (it then answers with an empty `b0 00 ...`)."""
+    query = bytes([0xB0, 0, 0, 0, 0, 0, 0, 0x4F])
+    for _ in range(6):                                     # a stale buffer is possible if something else talks to the interface
+        fcntl.ioctl(fd, HIDIOCSFEATURE(9), bytes([0]) + query)
+        time.sleep(0.1)
+        buf = bytearray(9)
+        fcntl.ioctl(fd, HIDIOCGFEATURE(9), buf)
+        if buf[1] == 0xB0 and buf[2] == 0x01:
+            return buf[3]
+        if buf[1] == 0xB0 and not any(buf[2:]):
+            return None
+    raise OSError(5, "no valid reply to the query")
+
+
+def write_flag(fd, flag):
+    b7 = [0x30, 0x01, 1 if flag else 0, 0, 0, 0, 0]
+    fcntl.ioctl(fd, HIDIOCSFEATURE(9), bytes([0] + b7 + [checksum(b7)]))
+
+
+def save(flag):
+    SAVED.parent.mkdir(parents=True, exist_ok=True)
+    SAVED.write_text(f"{int(flag)}\n")
+
+
+def saved():
+    try:
+        return int(SAVED.read_text().strip())
+    except (OSError, ValueError):
+        return None
+
+
+def main(argv):
+    wait = "--wait" in argv
+    argv = [a for a in argv if a != "--wait"]
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        print(__doc__)
+        return
+    cmd = argv[0]
+    if cmd == "get":
+        flag = with_device(read_flag, wait)
+        if flag is None:
+            print("off (backlight stays on; the keyboard has no value set since power-up)")
+            return
+        save(flag)
+        print("on (off after 30 s)" if flag else "off (backlight stays on)")
+        return
+    if cmd == "apply":
+        flag = saved()
+        if flag is None:
+            return                                         # nothing chosen yet: leave the keyboard as it is
+    elif cmd in ("on", "off"):
+        flag = 1 if cmd == "on" else 0
+    elif cmd == "toggle":
+        flag = 0 if with_device(read_flag, wait) == 1 else 1
+    else:
+        die("unknown command, see `kbd-backlight-timeout --help`")
+
+    def go(fd):
+        write_flag(fd, flag)
+        back = read_flag(fd)
+        if back != flag:
+            raise OSError(5, f"wrote {flag} but the keyboard reports {back}")
+    with_device(go, wait)
+    save(flag)
+    print("on (off after 30 s)" if flag else "off (backlight stays on)")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

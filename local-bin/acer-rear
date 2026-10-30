@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""acer-rear — rear light of the Acer Predator Helios 16 (PH16-71), through the acer-rear-wmi kernel module (/dev/acer-rear).
+
+  acer-rear status                          current state (saved + what the firmware reports)
+  acer-rear set EFFECT [RRGGBB] [--speed 1-5] [--level 0-100]
+                                            EFFECT: static breathing neon wave twinkling  (colour: static, breathing, twinkling)
+  acer-rear color RRGGBB | speed N | level N   change one thing, keep the rest
+  acer-rear off | on | toggle               off = brightness 0 (the saved effect comes back with `on`)
+  acer-rear apply [--wait]                  re-apply the saved state (what Hyprland runs at login)
+
+The state lives in ~/.config/rgbkb/rear.json, next to the keyboard's config.json; the Noctalia RGB panel reads and writes it through this tool.
+"""
+import json, os, sys, time
+from pathlib import Path
+
+DEV = "/dev/acer-rear"
+CFG = Path.home() / ".config/rgbkb/rear.json"
+MODES = {"static": 0, "breathing": 1, "neon": 2, "wave": 3, "twinkling": 7}
+ALIASES = {"breathe": "breathing", "twinkle": "twinkling", "solid": "static", "all": "static"}
+HAS_COLOR = {"static", "breathing", "twinkling"}
+DEFAULT = {"effect": "static", "hexcolor": "00AEC7", "speed": 3, "level": 100, "off": False}
+
+
+def die(msg, code=1):
+    print(f"acer-rear: {msg}", file=sys.stderr)
+    sys.exit(code)
+
+
+def wmi(cmd):
+    """One command to the kernel module; returns its reply ('ok ...')."""
+    try:
+        fd = os.open(DEV, os.O_RDWR)
+    except FileNotFoundError:
+        die(f"{DEV} missing - the acer_rear_wmi module is not loaded (sudo modprobe acer_rear_wmi)")
+    except PermissionError:
+        die(f"no permission on {DEV} (udev rule 99-acer-rear.rules, group plugdev)")
+    try:
+        os.write(fd, cmd.encode())
+        return os.read(fd, 256).decode().strip()
+    except OSError as e:
+        die(f"'{cmd}' rejected: {e.strerror}")
+    finally:
+        os.close(fd)
+
+
+def load():
+    try:
+        return {**DEFAULT, **json.loads(CFG.read_text())}
+    except (OSError, ValueError):
+        return dict(DEFAULT)
+
+
+def save(st):
+    CFG.parent.mkdir(parents=True, exist_ok=True)
+    CFG.write_text(json.dumps(st, indent=2) + "\n")
+
+
+def parse_hex(v):
+    h = v.lstrip("#").upper()
+    if len(h) != 6 or any(c not in "0123456789ABCDEF" for c in h):
+        die(f"bad colour '{v}' (use RRGGBB)")
+    return h
+
+
+def buffer(mode, speed, level, hexcolor):
+    rgb = hexcolor if MODES_BY_VALUE[mode] in ("breathing", "twinkling") else "000000"   # static takes its colour from set_color
+    return f"{mode:02x}{speed:02x}{level:02x}0001{rgb}0302" + "00" * 6
+
+
+MODES_BY_VALUE = {v: k for k, v in MODES.items()}
+
+
+def apply(st):
+    mode = MODES[st["effect"]]
+    if st["off"]:
+        replies = [wmi(f"set_rear {buffer(0, 3, 0, '000000')}")]       # static, brightness 0 = off (verified)
+    else:
+        replies = [wmi(f"set_rear {buffer(mode, st['speed'], st['level'], st['hexcolor'])}")]
+        if st["effect"] == "static":                                     # static colour comes from the colour slot, set after the mode
+            replies.append(wmi(f"set_color {st['hexcolor']}"))
+    bad = [r for r in replies if not r.startswith("ok")]
+    if bad:
+        die("firmware said: " + bad[0])
+
+
+def wait_for_device(seconds=6):
+    end = time.monotonic() + seconds
+    while not os.path.exists(DEV) and time.monotonic() < end:
+        time.sleep(0.25)
+
+
+def clamp(v, lo, hi, name):
+    try:
+        n = int(v)
+    except ValueError:
+        die(f"{name} must be a number")
+    return max(lo, min(hi, n))
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        print(__doc__)
+        return
+    cmd, args = argv[0], argv[1:]
+    st = load()
+    if "--wait" in args:
+        args.remove("--wait")
+        wait_for_device()
+
+    if cmd == "status":
+        print(json.dumps(st))
+        print("firmware:", wmi("get_rear"), "| static slot:", wmi("get_slot"))
+        return
+    if cmd == "apply":
+        apply(st)
+        return
+    if cmd == "off":
+        st["off"] = True
+    elif cmd == "on":
+        st["off"] = False
+    elif cmd == "toggle":
+        st["off"] = not st["off"]
+    elif cmd == "color" and args:
+        st["hexcolor"], st["off"] = parse_hex(args[0]), False
+    elif cmd == "speed" and args:
+        st["speed"], st["off"] = clamp(args[0], 1, 5, "speed"), False
+    elif cmd == "level" and args:
+        n = clamp(args[0], 0, 100, "level")
+        st["off"] = n == 0
+        if n:
+            st["level"] = n                                              # keep the old brightness for `on`
+    elif cmd == "set" and args:
+        effect = ALIASES.get(args[0], args[0])
+        if effect not in MODES:
+            die(f"unknown effect '{args[0]}' (static breathing neon wave twinkling)")
+        st["effect"], st["off"] = effect, False
+        rest = args[1:]
+        while rest:
+            a = rest.pop(0)
+            if a == "--speed" and rest:
+                st["speed"] = clamp(rest.pop(0), 1, 5, "speed")
+            elif a == "--level" and rest:
+                st["level"] = clamp(rest.pop(0), 0, 100, "level")
+            else:
+                st["hexcolor"] = parse_hex(a)
+        if st["level"] == 0:
+            st["level"] = 100                                            # picking an effect should show it
+    else:
+        die("unknown command, see `acer-rear --help`", 2)
+    apply(st)
+    save(st)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

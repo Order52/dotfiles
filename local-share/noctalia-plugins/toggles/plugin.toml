@@ -53,6 +53,6 @@ entry = "rgb.luau"
 id     = "rgb_panel"
 entry  = "rgb_panel.luau"
 width  = 380
-height = 760
+height = 800
 placement       = "floating"
 open_near_click = true

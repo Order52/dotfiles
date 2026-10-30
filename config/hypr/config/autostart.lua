@@ -23,6 +23,13 @@ hl.on("hyprland.start", function()
     -- (A fixed `rgbkb wave ...` here would overwrite the saved choice at every login.)
     run("bash -c 'PATH=$HOME/.local/bin:$PATH ~/.local/share/pipx/venvs/rgbkb/bin/rgbkb apply'")
 
+    -- Keyboard "backlight off after 30 s idle": re-send the saved choice (the keyboard forgets it at power-up).
+    run("bash -c 'PATH=$HOME/.local/bin:$PATH kbd-backlight-timeout apply --wait'")
+
+    -- Rear light: off at login. `acer-rear on` (or the Rear light tab in the RGB panel) brings the saved effect back.
+    -- --wait gives the acer_rear_wmi module a few seconds to create /dev/acer-rear on a cold boot.
+    run("bash -c 'PATH=$HOME/.local/bin:$PATH acer-rear off --wait'")
+
 
     -- KDE Connect
     run("kdeconnectd")

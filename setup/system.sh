@@ -37,6 +37,25 @@ install -m 644 system/etc/systemd/system/linuwu_sense.service /etc/systemd/syste
 systemd-tmpfiles --create /etc/tmpfiles.d/linuwu_sense.conf /etc/tmpfiles.d/acer-platform-profile.conf /etc/tmpfiles.d/predator-tuning.conf 2>/dev/null
 ok "permissions: group linuwu_sense can set fan speed, profile, CPU clocks and power limits (log out/in for the group)"
 
+# ------------------------------------------------------------------ rear light
+step "Rear light + power-mode WMI interface (acer_rear_wmi, /dev/acer-rear)"
+RSRC=/usr/src/acer-rear-wmi-1.0
+install -d "$RSRC"
+install -m 644 drivers/acer-rear-wmi/Makefile drivers/acer-rear-wmi/dkms.conf drivers/acer-rear-wmi/acer_rear_wmi.c "$RSRC/"
+dkms status acer-rear-wmi/1.0 2>/dev/null | grep -q . || dkms add acer-rear-wmi/1.0 >/dev/null 2>&1
+RBUILT=0
+for k in /usr/lib/modules/*/build; do
+  kv=$(basename "$(dirname "$k")")
+  [ -d "$k/include" ] || continue
+  if dkms status acer-rear-wmi/1.0 -k "$kv" 2>/dev/null | grep -q installed; then ok "$kv already built"; RBUILT=1; continue; fi
+  if dkms install acer-rear-wmi/1.0 -k "$kv" >/dev/null 2>&1; then ok "built for $kv"; RBUILT=1; else warn "build failed for $kv (see make.log in /var/lib/dkms/acer-rear-wmi)"; fi
+done
+[ "$RBUILT" = 1 ] || warn "rear-light module not built for any kernel"
+install -m 644 system/etc/modules-load.d/acer-rear-wmi.conf /etc/modules-load.d/
+install -m 644 system/etc/udev/rules.d/99-acer-rear.rules /etc/udev/rules.d/
+udevadm control --reload 2>/dev/null
+modprobe acer_rear_wmi 2>/dev/null && { udevadm trigger --subsystem-match=misc 2>/dev/null; ok "module loaded, /dev/acer-rear usable by group plugdev"; } || warn "acer_rear_wmi not loaded yet (reboot may be needed)"
+
 # ------------------------------------------------------------------ keyboard RGB
 step "Keyboard RGB (rgbkb, USB 04f2:0117)"
 install -m 644 system/etc/udev/rules.d/99-rgbkb.rules /etc/udev/rules.d/

@@ -1,6 +1,8 @@
--- Keyboard RGB panel (Acer PH16-71): presets, effects, quick colors, speed, brightness, direction.
--- Every change runs `rgbkb`, which saves it (~/.config/rgbkb/config.json) so it is re-applied at login.
+-- RGB panel (Acer PH16-71), two tabs: the keyboard (presets, effects, colors, speed, brightness, direction) and the rear light.
+-- Keyboard changes run `rgbkb` (saved in ~/.config/rgbkb/config.json); rear-light changes run `acer-rear` (saved in rear.json). Both are re-applied at login.
 local CONFIG = noctalia.expandPath("~/.config/rgbkb/config.json")
+local REAR_CONFIG = noctalia.expandPath("~/.config/rgbkb/rear.json")
+local IDLE_FILE = noctalia.expandPath("~/.config/rgbkb/idle-off")   -- written by kbd-backlight-timeout: 1 = backlight off after 30 s idle
 local EFFECTS = {
   { "wave", "Wave", false }, { "neon", "Neon", false }, { "all", "Solid", true }, { "breathe", "Breathe", true },
   { "ripple", "Ripple", true }, { "snake", "Snake", true }, { "heartbeat", "Pulse", true }, { "snow", "Snow", true },
@@ -24,7 +26,19 @@ local COLORS = {
 }
 local DIRS = { "→", "←", "↑", "↓", "↻", "↺" }
 
-local st = { effect = "wave", hex = "00AAFF", speed = 10, level = 0, dir = 1, more = false }
+-- rear light: { id, label, colored }; wire modes static 0 · breathing 1 · neon 2 · wave 3 · twinkling 7, speed 1-5, brightness 0-100
+local REAR_EFFECTS = {
+  { "static", "Static", true }, { "breathing", "Breathe", true }, { "neon", "Neon", false },
+  { "wave", "Wave", false }, { "twinkling", "Twinkle", true },
+}
+-- { id, label, effect, hex }
+local REAR_PRESETS = {
+  { "cyber", "Cyber", "wave", nil }, { "ocean", "Ocean", "breathing", "0099FF" },
+  { "lava", "Lava", "static", "FF3300" }, { "calm", "Calm", "breathing", "B400FF" },
+}
+
+local st = { effect = "wave", hex = "00AAFF", speed = 10, level = 0, dir = 1, more = false, tab = "kb", idle = 0 }
+local rs = { effect = "static", hex = "00AEC7", speed = 3, level = 100, off = false, more = false }
 local dragging = false        -- a slider is being dragged: don't overwrite it from the file
 
 local function load()
@@ -34,6 +48,15 @@ local function load()
   st.speed = tonumber(raw:match('"speed"%s*:%s*([%d%.]+)')) or st.speed
   st.level = tonumber(raw:match('"level"%s*:%s*(%d+)')) or tonumber(raw:match('"brightness"%s*:%s*(%d+)')) or st.level
   st.dir = tonumber(raw:match('"direction"%s*:%s*(%d)')) or st.dir
+
+  st.idle = tonumber((noctalia.readFile(IDLE_FILE) or ""):match("(%d)")) or st.idle
+
+  local r = noctalia.readFile(REAR_CONFIG) or ""
+  rs.effect = r:match('"effect"%s*:%s*"(%w+)"') or rs.effect
+  rs.hex = r:match('"hexcolor"%s*:%s*"(%x+)"') or rs.hex
+  rs.speed = tonumber(r:match('"speed"%s*:%s*(%d+)')) or rs.speed
+  rs.level = tonumber(r:match('"level"%s*:%s*(%d+)')) or rs.level
+  rs.off = r:match('"off"%s*:%s*(%a+)') == "true"
 end
 
 local function hasColor(effect)
@@ -55,6 +78,100 @@ end
 
 local function lbl(t, size) return ui.label({ text = t, fontSize = size or 12, color = "on_surface_variant" }) end
 
+local function tabs()
+  return ui.row({ gap = 4 }, {
+    ui.button({ glyph = "keyboard", text = "Keyboard", flexGrow = 1, controlSize = "sm",
+      variant = st.tab == "kb" and "default" or "ghost", onClick = "onTabKb" }),
+    ui.button({ glyph = "bulb", text = "Rear light", flexGrow = 1, controlSize = "sm",
+      variant = st.tab == "rear" and "default" or "ghost", onClick = "onTabRear" }),
+  })
+end
+
+local function rearHasColor(effect)
+  for _, e in ipairs(REAR_EFFECTS) do if e[1] == effect then return e[3] end end
+  return false
+end
+
+-- one `acer-rear set` carries the whole rear state; it saves rear.json itself
+local function rearApply()
+  if rs.off then run("acer-rear off"); return end
+  local cmd = "acer-rear set " .. rs.effect
+  if rearHasColor(rs.effect) then cmd = cmd .. " " .. rs.hex end
+  if rs.effect ~= "static" then cmd = cmd .. " --speed " .. math.floor(rs.speed) end
+  run(cmd .. " --level " .. math.max(1, math.floor(rs.level)))
+end
+
+local function renderRearPicker()
+  panel.render(ui.column({ gap = 12, padding = 16 }, {
+    ui.row({ gap = 10, align = "center" }, {
+      ui.button({ glyph = "arrow-left", text = "Back", variant = "ghost", controlSize = "sm", onClick = "onRearMore" }),
+      ui.column({ gap = 0, flexGrow = 1 }, {
+        ui.label({ text = "Rear light color", fontSize = 18, color = "tertiary" }),
+        ui.label({ text = "#" .. rs.hex .. "  ·  " .. rs.effect, fontSize = 12, color = "on_surface_variant" }),
+      }),
+    }),
+    ui.colorPicker({ value = "#" .. rs.hex, swatches = { "#FF0000", "#FF6A00", "#FFD000", "#00FF55", "#00FFD0", "#00AAFF", "#3A3AFF", "#B400FF", "#FF00AA", "#FFFFFF" },
+      onChange = "onRearPickerLive", onChangeEnd = "onRearPicker" }),
+    ui.button({ glyph = "check", text = "Done", variant = "default", onClick = "onRearMore" }),
+  }))
+end
+
+local function renderRear()
+  if rs.more and rearHasColor(rs.effect) then return renderRearPicker() end
+  local body = {
+    ui.row({ gap = 10, align = "center" }, {
+      ui.glyph({ name = "bulb", size = 26, color = rs.off and "on_surface_variant" or "tertiary" }),
+      ui.column({ gap = 0, flexGrow = 1 }, {
+        ui.label({ text = "Rear light", fontSize = 18, color = "tertiary" }),
+        ui.label({ text = rs.off and "Off" or "Acer Predator PH16-71", fontSize = 12, color = "on_surface_variant" }),
+      }),
+      ui.button({ glyph = rs.off and "bulb" or "bulb-off", tooltip = rs.off and "Turn on" or "Turn off",
+        variant = rs.off and "default" or "ghost", controlSize = "sm", onClick = "onRearToggle" }),
+    }),
+    tabs(),
+  }
+
+  body[#body + 1] = lbl("Presets")
+  local row = {}
+  for _, p in ipairs(REAR_PRESETS) do
+    row[#row + 1] = ui.button({ text = p[2], flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onRearPreset_" .. p[1] })
+  end
+  body[#body + 1] = ui.row({ gap = 4 }, row)
+
+  body[#body + 1] = lbl("Effect")
+  row = {}
+  for _, e in ipairs(REAR_EFFECTS) do
+    row[#row + 1] = ui.button({ text = e[2], flexGrow = 1, controlSize = "sm", fontSize = 11,
+      variant = (not rs.off and rs.effect == e[1]) and "default" or "ghost", onClick = "onRearEffect_" .. e[1] })
+  end
+  body[#body + 1] = ui.row({ gap = 4 }, row)
+
+  if rearHasColor(rs.effect) then
+    body[#body + 1] = lbl("Color  #" .. rs.hex)
+    local c1, c2 = {}, {}
+    for i, c in ipairs(COLORS) do
+      local b = ui.button({ text = c[1], flexGrow = 1, controlSize = "sm", fontSize = 11,
+        variant = (rs.hex == c[2]) and "default" or "ghost", onClick = "onRearColor_" .. i })
+      if i <= 5 then c1[#c1 + 1] = b else c2[#c2 + 1] = b end
+    end
+    body[#body + 1] = ui.row({ gap = 4 }, c1)
+    body[#body + 1] = ui.row({ gap = 4 }, c2)
+    body[#body + 1] = ui.row({ gap = 4 }, {
+      ui.button({ glyph = "palette", text = "Custom color…", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onRearMore" }),
+      ui.button({ glyph = "keyboard", text = "Match keyboard", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onRearMatch" }),
+    })
+  end
+
+  if rs.effect ~= "static" then
+    body[#body + 1] = lbl("Speed  " .. math.floor(rs.speed) .. " / 5")
+    body[#body + 1] = ui.slider({ min = 1, max = 5, step = 1, value = rs.speed, controlSize = "md", onChange = "onRearSpeed", onDragEnd = "onRearSpeedEnd" })
+  end
+  body[#body + 1] = lbl("Brightness  " .. (rs.off and 0 or math.floor(rs.level)) .. " %")
+  body[#body + 1] = ui.slider({ min = 0, max = 100, step = 5, value = rs.off and 0 or rs.level, controlSize = "md", onChange = "onRearLevel", onDragEnd = "onRearLevelEnd" })
+
+  panel.render(ui.column({ gap = 8, padding = 16 }, body))
+end
+
 local function renderPicker()
   panel.render(ui.column({ gap = 12, padding = 16 }, {
     ui.row({ gap = 10, align = "center" }, {
@@ -71,6 +188,7 @@ local function renderPicker()
 end
 
 function render()
+  if st.tab == "rear" then return renderRear() end
   if st.more and hasColor(st.effect) then return renderPicker() end
   local body = {
     ui.row({ gap = 10, align = "center" }, {
@@ -81,6 +199,7 @@ function render()
       }),
       ui.button({ glyph = "bulb-off", tooltip = "Backlight off", variant = "ghost", controlSize = "sm", onClick = "onOff" }),
     }),
+    tabs(),
   }
 
   -- presets (2 rows of 4)
@@ -129,6 +248,8 @@ function render()
     body[#body + 1] = ui.row({ gap = 4 }, d)
   end
 
+  body[#body + 1] = ui.button({ glyph = "hourglass", text = "Backlight off after 30 s idle", controlSize = "sm",
+    variant = st.idle == 1 and "default" or "ghost", onClick = "onIdleToggle" })
   body[#body + 1] = ui.row({ gap = 6 }, {
     ui.button({ glyph = "dice", text = "Random", flexGrow = 1, variant = "ghost", onClick = "onRandom" }),
     ui.button({ glyph = "refresh", text = "Reapply", flexGrow = 1, variant = "ghost", onClick = "onReapply" }),
@@ -202,18 +323,72 @@ function onDir6() st.dir = 6; apply(); render() end
 function onRandom() run("kbd-rgb random") end
 function onReapply() apply() end
 function onOff() run("kbd-rgb-send all 000000") end
+function onIdleToggle() st.idle = 1 - st.idle; run("kbd-backlight-timeout " .. (st.idle == 1 and "on" or "off") .. " --wait"); render() end
+
+-- rear light tab
+function onTabKb() st.tab = "kb"; render() end
+function onTabRear() st.tab = "rear"; load(); render() end
+function onRearToggle() rs.off = not rs.off; run(rs.off and "acer-rear off" or "acer-rear on"); render() end
+local function rearEffect(e) rs.effect = e; rs.off = false; rearApply(); render() end
+function onRearEffect_static() rearEffect("static") end
+function onRearEffect_breathing() rearEffect("breathing") end
+function onRearEffect_neon() rearEffect("neon") end
+function onRearEffect_wave() rearEffect("wave") end
+function onRearEffect_twinkling() rearEffect("twinkling") end
+local function rearPreset(id)
+  for _, p in ipairs(REAR_PRESETS) do
+    if p[1] == id then
+      rs.effect, rs.off = p[3], false
+      if p[4] then rs.hex = p[4] end
+      rearApply(); render(); return
+    end
+  end
+end
+function onRearPreset_cyber() rearPreset("cyber") end
+function onRearPreset_ocean() rearPreset("ocean") end
+function onRearPreset_lava() rearPreset("lava") end
+function onRearPreset_calm() rearPreset("calm") end
+local function rearColor(i) rs.hex = COLORS[i][2]; rs.off = false; rearApply(); render() end
+function onRearColor_1() rearColor(1) end
+function onRearColor_2() rearColor(2) end
+function onRearColor_3() rearColor(3) end
+function onRearColor_4() rearColor(4) end
+function onRearColor_5() rearColor(5) end
+function onRearColor_6() rearColor(6) end
+function onRearColor_7() rearColor(7) end
+function onRearColor_8() rearColor(8) end
+function onRearColor_9() rearColor(9) end
+function onRearColor_10() rearColor(10) end
+function onRearMore() rs.more = not rs.more; render() end
+function onRearPickerLive(v) local h = parseHex(v); if h then rs.hex = h end end
+function onRearPicker(v) local h = parseHex(v); if h then rs.hex = h; rs.off = false; rearApply() end end
+function onRearMatch() rs.hex = st.hex; rs.off = false; rearApply(); render() end
+function onRearSpeed(v) dragging = true; rs.speed = tonumber(v) or rs.speed; render() end
+function onRearSpeedEnd(v) rs.speed = tonumber(v) or rs.speed; rs.off = false; rearApply(); dragging = false end
+function onRearLevel(v) dragging = true; local n = tonumber(v) or rs.level; rs.off = n <= 0; if n > 0 then rs.level = n end; render() end
+function onRearLevelEnd(v)
+  local n = tonumber(v) or rs.level
+  rs.off = n <= 0
+  if n > 0 then rs.level = n end
+  run("acer-rear level " .. math.floor(n))
+  dragging = false
+end
 
 -- Live sync: keyboard brightness keys, the bar scroll, `kbd-rgb` and presets all change the saved config behind the panel's back,
 -- so while the panel is open a bounded ticker re-reads it once a second and redraws when it changed.
 local gen = 0
-local function snapshot() return st.effect .. "|" .. st.hex .. "|" .. st.speed .. "|" .. st.level .. "|" .. st.dir end
+local function snapshot()
+  return st.idle .. "|" .. st.effect .. "|" .. st.hex .. "|" .. st.speed .. "|" .. st.level .. "|" .. st.dir
+    .. "|" .. rs.effect .. "|" .. rs.hex .. "|" .. rs.speed .. "|" .. rs.level .. "|" .. tostring(rs.off)
+end
 function onOpen()
-  load(); st.more = false; dragging = false
+  load(); st.more = false; rs.more = false; dragging = false
+  run("kbd-backlight-timeout get")      -- refreshes the saved flag (the panel picks it up on the next tick)
   gen = gen + 1
   local mine = gen
   local shown = nil
   noctalia.runStream("for i in $(seq 600); do echo; sleep 1; done", function()
-    if mine ~= gen or dragging or st.more then return end
+    if mine ~= gen or dragging or st.more or rs.more then return end
     local before = snapshot()
     load()
     if snapshot() ~= before then
