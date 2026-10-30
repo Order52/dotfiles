@@ -37,7 +37,7 @@ Existing configs are backed up to `~/dotfiles-backup-<date>` first. It is safe t
 * **GPU undervolt (LACT)**: 2400 MHz cap, +200 MHz core offset (≈ 900 mV), +500 MHz VRAM — stable here; +350 crashed, keep the margin.
 * **Reliability**: system service from boot, watchdog, independent 30 s health timer, fans back to firmware on any stop,
   re-armed after suspend/resume and after kernel / NVIDIA / DKMS updates (pacman hooks), driver auto-rebuild with an on-screen warning.
-* **Keyboard RGB** (`kbd-rgb`): menu / random / apply / any effect with a color — see [docs/keyboard-rgb.md](docs/keyboard-rgb.md).
+* **Keyboard RGB**: a Noctalia bar button + panel (effects, color picker, speed, brightness, direction), plus `kbd-rgb` in the terminal; your last choice is re-applied at login — see [docs/keyboard-rgb.md](docs/keyboard-rgb.md).
 * **Sleep**: NVIDIA suspend/resume services (the black-screen-on-wake fix), VRAM saved to disk instead of RAM, lid on suspend.
 
 ## Layout

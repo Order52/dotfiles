@@ -19,8 +19,9 @@ hl.on("hyprland.start", function()
     run("systemctl --user import-environment")
     run("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
 
-    -- Keyboard RGB
-    run("~/.local/share/pipx/venvs/rgbkb/bin/rgbkb wave --speed 10 --level 0")
+    -- Keyboard RGB: re-apply whatever was last chosen (Noctalia RGB panel, `kbd-rgb`, or the menu).
+    -- (A fixed `rgbkb wave ...` here would overwrite the saved choice at every login.)
+    run("bash -c 'PATH=$HOME/.local/bin:$PATH ~/.local/share/pipx/venvs/rgbkb/bin/rgbkb apply'")
 
 
     -- KDE Connect

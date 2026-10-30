@@ -4,7 +4,13 @@ The keyboard backlight is a USB HID device (`04f2:0117`, "USB-HID Gaming Keyboar
 (that one is fans / profiles / battery). It is driven by **rgbkb** — a small Python tool (`third-party/rgbkb/ph16-71-rgb`) that talks to the
 keyboard over USB. Everything you need is installed by `./install.sh`.
 
-## Change it
+## Change it — from the Noctalia bar
+
+The bar has a **keyboard button** (shows the current effect, e.g. "Wave"). **Click** it for the RGB panel: effects, a color picker with
+swatches, speed, brightness, wave direction, and **Random / Reapply / Off**. Every change is applied instantly and saved. **Middle-click**
+the button for a random effect. (Plugin: `local-share/noctalia-plugins/toggles/rgb.luau` + `rgb_panel.luau`.)
+
+## Change it — from a terminal
 
 ```bash
 kbd-rgb                      # interactive menu: effect, color, speed, brightness (saved, offers a start-up service)
@@ -30,7 +36,7 @@ Effects: `wave`, `neon` (no color) · `all`, `breathe`, `ripple`, `snake`, `hear
 | Wrapper command | `local-bin/kbd-rgb` → `~/.local/bin/kbd-rgb` |
 | The tool itself | `third-party/rgbkb/ph16-71-rgb` (pipx package `rgbkb`, command `rgbkb`) |
 | Saved effect | `config/rgbkb/config.json` → `~/.config/rgbkb/config.json` |
-| Applied at login | `config/hypr/config/autostart.lua`: `rgbkb wave --speed 10 --level 0`. Change that line, or replace it with `rgbkb apply` to use whatever you saved with the menu |
+| Applied at login | `config/hypr/config/autostart.lua` runs `rgbkb apply`, i.e. whatever you chose last (panel, `kbd-rgb` or the menu) |
 | USB permission | `system/etc/udev/rules.d/99-rgbkb.rules` (lets your user talk to the keyboard without root) |
 | Original upstream | <https://github.com/fuho/rgbkb> |
 

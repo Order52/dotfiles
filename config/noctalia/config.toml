@@ -71,7 +71,7 @@ thickness = 35
     border = ""
     fill = "on_secondary"
     id = "g2"
-    members = [ "profile", "fan", "refresh_rate", "gamemode", "recorder" ]
+    members = [ "profile", "fan", "rgb", "refresh_rate", "gamemode", "recorder" ]
     opacity = 1.0
     padding = 6.0
 
@@ -259,6 +259,12 @@ visualization = "none"
 type = "sloppy/toggles:profile"
 
 [widget.profile.actions]
+middle = "none"
+
+[widget.rgb]
+type = "sloppy/toggles:rgb"
+
+[widget.rgb.actions]
 middle = "none"
 
 [widget.fan]
