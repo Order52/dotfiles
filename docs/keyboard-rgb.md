@@ -11,6 +11,14 @@ The bar has a **keyboard button** (shows the current effect, e.g. "Wave"). **Cli
 screen under "Custom color…", with Back / Done), speed, brightness, wave direction, **Random / Reapply**, and a backlight-off button. Every change is applied instantly and saved. **Middle-click**
 the button for a random effect, and **scroll** on it to change the keyboard brightness (0–32, with an on-screen readout). (Plugin: `local-share/noctalia-plugins/toggles/rgb.luau` + `rgb_panel.luau`.)
 
+## Keyboard brightness keys
+
+The keyboard's backlight keys change the RGB brightness (step 4, range 0–32, with an on-screen readout):
+`XF86KbdBrightnessUp` / `XF86KbdBrightnessDown` (the "keyboard light" keys) and `XF86KbdLightOnOff` (backlight off / back to the
+previous effect). Script: `local-bin/kbd-rgb-brightness up|down|toggle|set N`; binds in `config/hypr/config/keybinds.lua`.
+If your key does nothing, run `wev` in a terminal, press it, and bind the keysym it shows to `kbd-rgb-brightness up` or `down`.
+A solid color (`all`) has no brightness setting, so use any other effect.
+
 ## Change it — from a terminal
 
 ```bash

@@ -149,6 +149,11 @@ bind("XF86AudioPrev", noct("media previous"), nil, "Previous track")
 bind("XF86MonBrightnessUp",   noct("brightness-up"), rl)
 bind("XF86MonBrightnessDown", noct("brightness-down"), rl)
 
+-- ── Keyboard backlight (Acer RGB keyboard, via rgbkb) ───────────
+bind("XF86KbdBrightnessUp",   exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true, locked = true }, "Keyboard RGB brightness up")
+bind("XF86KbdBrightnessDown", exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true, locked = true }, "Keyboard RGB brightness down")
+bind("XF86KbdLightOnOff",     exec("~/.local/bin/kbd-rgb-brightness toggle"), { locked = true }, "Keyboard RGB backlight on/off")
+
 -- ── Lock ────────────────────────────────────────────────────────
 bind(mainMod .. " + SHIFT + X", exec("swaylock-fancy -e -K -p 10 -f Hack-Regular"), nil, "Lock the screen")
 bind("SUPER + L", exec("hyprlock"))
