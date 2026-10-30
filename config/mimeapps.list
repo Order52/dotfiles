@@ -1,0 +1,12 @@
+[Default Applications]
+x-scheme-handler/nxm=amethystmodmanager-nxm.desktop
+x-scheme-handler/claude=com.anthropic.Claude.desktop
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+x-scheme-handler/discord=vesktop.desktop
+x-scheme-handler/tg=userapp-AyuGram Desktop-ZZ0DY3.desktop
+x-scheme-handler/tonsite=userapp-AyuGram Desktop-QKIEY3.desktop
+
+[Added Associations]
+x-scheme-handler/nxm=amethystmodmanager-nxm.desktop
+x-scheme-handler/tg=userapp-AyuGram Desktop-ZZ0DY3.desktop;
+x-scheme-handler/tonsite=userapp-AyuGram Desktop-QKIEY3.desktop;

@@ -1,0 +1,5 @@
+[Unit]
+Description=Predator health check
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/predator/health.sh

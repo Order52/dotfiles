@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# 1. Get the currently active monitor name instantly (requires jq)
+# This is much faster than grimblast's detection logic.
+MONITOR=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name')
+
+# 2. Capture & Edit in one pipeline
+# 'grim -o' grabs the specific monitor.
+# '-' tells grim to output to stdout.
+# '|' pipes that data directly to satty's stdin.
+# 'satty -f -' tells satty to read from that pipe.
+
+grim -o "$MONITOR" - | satty --filename - --copy-command wl-copy --early-exit --init-tool crop

@@ -1,0 +1,119 @@
+[general]
+import = ["~/.config/alacritty/themes/noctalia.toml"]
+live_config_reload = true
+
+[env]
+TERM = "xterm-256color"
+
+[window]
+decorations = "None"
+opacity = 0.80
+dynamic_padding = true
+
+[window.padding]
+x = 10
+y = 10
+
+[window.dimensions]
+columns = 100
+lines = 30
+
+[window.class]
+general = "Alacritty"
+instance = "Alacritty"
+
+[font]
+size = 12
+
+[font.normal]
+family = "MesloLGM Nerd Font Mono"
+
+[font.bold]
+family = "MesloLGM Nerd Font Mono"
+
+[font.italic]
+family = "MesloLGM Nerd Font Mono"
+
+[font.bold_italic]
+family = "MesloLGM Nerd Font Mono"
+
+# Cursor (Beam + Blink is the max animation possible)
+[cursor]
+style = { shape = "Beam", blinking = "On" }
+blink_interval = 500
+unfocused_hollow = true
+
+[terminal.shell]
+program = "/usr/bin/fish"
+
+[mouse]
+hide_when_typing = true
+
+# Colors
+[colors]
+draw_bold_text_with_bright_colors = true
+
+[colors.primary]
+background = "#000000"
+foreground = "#f8f8f2"
+
+[colors.normal]
+black   = "#000000"
+red     = "#ff5555"
+green   = "#50fa7b"
+yellow  = "#f1fa8c"
+blue    = "#caa9fa"
+magenta = "#ff79c6"
+cyan    = "#8be9fd"
+white   = "#bfbfbf"
+
+[colors.bright]
+black   = "#575b70"
+red     = "#ff6e67"
+green   = "#5af78e"
+yellow  = "#f4f99d"
+blue    = "#caa9fa"
+magenta = "#ff92d0"
+cyan    = "#9aedfe"
+white   = "#e6e6e6"
+
+# Mappings
+[[keyboard.bindings]]
+key = "V"
+mods = "Control|Shift"
+action = "Paste"
+
+[[keyboard.bindings]]
+key = "C"
+mods = "Control|Shift"
+action = "Copy"
+
+[[keyboard.bindings]]
+key = "Insert"
+mods = "Shift"
+action = "PasteSelection"
+
+[[keyboard.bindings]]
+key = "Key0"
+mods = "Control"
+action = "ResetFontSize"
+
+[[keyboard.bindings]]
+key = "Equals"
+mods = "Control"
+action = "IncreaseFontSize"
+
+[[keyboard.bindings]]
+key = "Plus"
+mods = "Control"
+action = "IncreaseFontSize"
+
+[[keyboard.bindings]]
+key = "Minus"
+mods = "Control"
+action = "DecreaseFontSize"
+
+[[keyboard.bindings]]
+key = "Return"
+mods = "Shift"
+chars = "\u001B\r"

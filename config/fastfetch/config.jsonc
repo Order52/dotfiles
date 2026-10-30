@@ -1,0 +1,140 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "source": "$HOME/.config/fastfetch/logo.txt",
+    "padding": {
+      "right": 6,
+      "top": 2
+    }
+  },
+  "display": {
+    "separator": " ➜  "
+  },
+  "modules": [
+    "break",
+    {
+      "type": "title",
+      "format": "                                {6}{7}{8}"
+    },
+    "break",
+    {
+      "type": "custom",
+      "format": "┌──────────────────────────────────────────────────────────────────────────────┐"
+    },
+    {
+      "type": "os",
+      "key": "     OS            ",
+      "keyColor": "green"
+    },
+    {
+      "type": "host",
+      "key": "    󰌢 Machine       ",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "display",
+      "key": "    󰍹 Display       ",
+      "keyColor": "green"
+    },
+    {
+      "type": "kernel",
+      "key": "     Kernel        ",
+      "keyColor": "blue"
+    },
+    {
+      "type": "uptime",
+      "key": "    󰅐 Uptime        ",
+      "keyColor": "green"
+    },
+    {
+      "type": "packages",
+      "key": "     Packages      ",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "wm",
+      "key": "     WM            ",
+      "keyColor": "blue"
+    },
+    {
+      "type": "shell",
+      "key": "     Shell         ",
+      "keyColor": "green"
+    },
+    {
+      "type": "terminal",
+      "key": "     Terminal      ",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "terminalfont",
+      "key": "     Font          ",
+      "keyColor": "blue"
+    },
+    {
+      "type": "cpuusage",
+      "key": "    󰐪 CPU Usage     ",
+      "keyColor": "blue"
+    },
+    {
+      "type": "cpu",
+      "key": "    󰻠 CPU           ",
+      "keyColor": "green"
+    },
+    {
+      "type": "gpu",
+      "key": "    󰍛 GPU           ",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "processes",
+      "key": "    󰚭 Processes     ",
+      "keyColor": "cyan"
+    },
+    {
+      "type": "memory",
+      "key": "    󰑭 Memory        ",
+      "keyColor": "blue"
+    },
+    {
+      "type": "swap",
+      "key": "    󰋊 Swap          ",
+      "keyColor": "green"
+    },
+    {
+      "type": "disk",
+      "key": "    󰋊 Disk          ",
+      "keyColor": "cyan",
+      "folders": ["/", "/home"]
+    },
+    {
+      "type": "wifi",
+      "key": "     Wifi          ",
+      "keyColor": "green"
+    },
+    {
+      "type": "dns",
+      "key": "    󰌗 DNS           ",
+      "keyColor": "blue"
+    },
+    {
+      "type": "localip",
+      "key": "    󰩟 Local IP      ",
+      "keyColor": "cyan",
+      "compact": true
+    },
+    {
+      "type": "custom",
+      "format": "└──────────────────────────────────────────────────────────────────────────────┘"
+    },
+    "break",
+    {
+      "type": "colors",
+      "paddingLeft": 34,
+      "symbol": "circle",
+      "block": {
+        "width": 10
+      }
+    }
+  ]
+}

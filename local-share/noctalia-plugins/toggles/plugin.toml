@@ -1,0 +1,46 @@
+id          = "sloppy/toggles"
+name        = "Quick Toggles"
+version     = "1.0.0"
+plugin_api  = 3
+author      = "sloppy"
+description = "Bar buttons that show their live state: refresh rate (Hz), gamemode on/off, CPU governor, screen recorder."
+
+[[widget]]
+id    = "refresh"
+entry = "refresh.luau"
+
+[[widget]]
+id    = "gamemode"
+entry = "gamemode.luau"
+
+[[widget]]
+id    = "governor"
+entry = "governor.luau"
+
+[[widget]]
+id    = "recorder"
+entry = "recorder.luau"
+
+[[widget]]
+id    = "fan"
+entry = "fan.luau"
+
+[[panel]]
+id     = "fan_panel"
+entry  = "fan_panel.luau"
+width  = 320
+height = 230
+placement       = "floating"
+open_near_click = true
+
+[[widget]]
+id    = "profile"
+entry = "profile.luau"
+
+[[panel]]
+id     = "profile_panel"
+entry  = "profile_panel.luau"
+width  = 340
+height = 320
+placement       = "floating"
+open_near_click = true

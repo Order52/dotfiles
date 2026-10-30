@@ -1,0 +1,63 @@
+* {
+    background-color: transparent;
+    text-color: #cdd6f4;
+    accent-color: #89b4fa;
+    margin: 0;
+    padding: 0;
+    spacing: 0;
+}
+
+window {
+    background-color: #1e1e2e;
+    border-color: @accent-color;
+    width: 30%;
+    height: 45%;
+    border: 2px;
+    border-radius: 12px;
+    padding: 15px;
+}
+
+inputbar {
+    padding: 8px 12px;
+    background-color: #313244;
+    border-radius: 8px;
+    children: [entry];
+    margin: 0 0 15px 0;
+}
+
+entry {
+    placeholder: "Search Emojis...";
+    placeholder-color: #a6adc8;
+    text-color: #cdd6f4;
+}
+
+listview {
+    columns: 6;
+    lines: 4;
+    cycle: true;
+    dynamic: true;
+    layout: vertical;
+    spacing: 8px;
+    fixed-height: true;
+    fixed-columns: true;
+}
+
+element {
+    orientation: vertical;
+    border-radius: 8px;
+    padding: 25px 10px;
+}
+
+element selected {
+    background-color: #313244;
+    text-color: @accent-color;
+    border: 1px;
+    border-color: @accent-color;
+}
+
+element-text {
+    horizontal-align: 0.5;
+    vertical-align: 0.5;
+    font: "Noto Color Emoji 36";
+    text-color: inherit;
+}

@@ -1,0 +1,46 @@
+[General]
+theme_name=BreezeVoid
+author=Gemini
+comment=Absolute Pitch Black Theme
+no_incompatibility_check=true
+
+[Common]
+# --- THE VOID (BACKGROUNDS) ---
+window.color=#000000
+base.color=#000000
+alt.base.color=#000000
+# Force inputs to be black
+edit.color=#000000
+edit.focus.color=#000000
+# Force headers/tabs to be black
+header.color=#000000
+tab.color=#000000
+tab.container.color=#000000
+tooltip.color=#000000
+menu.color=#000000
+
+# --- TEXT (HIGH CONTRAST) ---
+text.color=#ffffff
+edit.text.color=#ffffff
+header.text.color=#ffffff
+tab.text.color=#808080
+tab.active.text.color=#3daee9
+tooltip.text.color=#ffffff
+
+# --- VISUALS ---
+# Blue Breeze Highlights
+highlight.color=#3daee9
+highlight.text.color=#ffffff
+link.color=#3daee9
+
+# --- BUTTONS ---
+# Slightly lighter black so you can actually see the button exists
+button.color=#121212
+button.text.color=#ffffff
+button.pressed.color=#3daee9
+
+[Hacks]
+# CRITICAL: Disables transparency so black stays black (not gray-ish blur)
+transparent_dolphin_view=false
+no_window_blur=true
+frame_color=#000000

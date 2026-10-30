@@ -1,0 +1,10 @@
+id          = "sloppy/powermon"
+name        = "Power Monitor"
+version     = "1.0.0"
+plugin_api  = 3
+author      = "sloppy"
+description = "Live battery power draw (W) or voltage (V) plus AC state — replaces waybar's custom/electricity module."
+
+[[widget]]
+id    = "monitor"
+entry = "widget.luau"

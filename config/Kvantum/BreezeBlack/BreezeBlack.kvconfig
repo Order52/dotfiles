@@ -1,0 +1,70 @@
+[General]
+theme_name=BreezeBlack
+author=User
+comment=Pitch Black Breeze Theme
+# This tells Kvantum to ignore system defaults and use ONLY these settings
+no_incompatibility_check=true
+
+[Common]
+# --- MAIN BACKGROUNDS ---
+# Main window background (The Void)
+window.color=#000000
+# Sidebars and panels (Dolphin sidebar)
+base.color=#000000
+# Alternate rows in lists
+alt.base.color=#0a0a0a
+
+# --- TEXT COLORS ---
+# Normal text
+text.color=#ffffff
+# Disabled text (Gray)
+disabled.text.color=#808080
+# Text inside input boxes
+edit.text.color=#ffffff
+
+# --- INPUT FIELDS & SEARCH BARS ---
+# Background of the typing area
+edit.color=#000000
+# Border of input fields (Dark Gray so you can see the box exists)
+edit.frame=true
+edit.focus.color=#000000
+
+# --- BUTTONS ---
+# Normal Button
+button.color=#151515
+button.text.color=#ffffff
+# Hovered Button
+light.button.color=#3daee9
+# Pressed Button
+dark.button.color=#222222
+
+# --- HIGHLIGHTS & SELECTION ---
+# The blue selection bar
+highlight.color=#3daee9
+# Text inside the selection
+highlight.text.color=#ffffff
+# Inactive selection (when you click away)
+inactive.highlight.color=#333333
+
+# --- MENUS & TOOLTIPS ---
+menu.color=#000000
+menu.text.color=#ffffff
+tooltip.color=#101010
+tooltip.text.color=#ffffff
+
+# --- HEADERS ---
+header.color=#000000
+header.text.color=#ffffff
+
+# --- TABS ---
+tab.color=#000000
+tab.text.color=#808080
+tab.active.text.color=#3daee9
+
+[Hacks]
+# Forces Dolphin to respect the black background
+transparent_dolphin_view=false
+# Removes the annoying gray line between toolbars
+frame_color=#000000
+# Forces Qt to treat this as a dark theme (Fixes icons)
+is_dark=true

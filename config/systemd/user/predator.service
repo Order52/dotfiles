@@ -1,0 +1,18 @@
+[Unit]
+Description=Predator smart fan curve, thermal governor and profile auto
+StartLimitIntervalSec=0
+
+[Service]
+Type=notify
+NotifyAccess=main
+WatchdogSec=15
+ExecStart=%h/.local/bin/predator-daemon.py
+# whatever way the service ends (crash, kill, hang, stop): fans back to firmware control, clocks uncapped
+ExecStopPost=/bin/sh -c 'echo 0,0 > /sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/predator_sense/fan_speed; for f in /sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_max_freq; do echo 5000000 > $f; done; true'
+Restart=always
+RestartSec=1
+Nice=-5
+OOMScoreAdjust=-500
+
+[Install]
+WantedBy=default.target

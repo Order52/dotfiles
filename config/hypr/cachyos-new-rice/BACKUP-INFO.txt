@@ -1,0 +1,3 @@
+Hyprland desktop backup
+created: 2026-10-29T11:59:42
+files: 38

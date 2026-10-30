@@ -1,0 +1,27 @@
+#!/bin/sh
+
+mount="/"
+warning=20
+critical=10
+
+df -h -P -l "$mount" | awk -v warning=$warning -v critical=$critical '
+/\/.*/ {
+  text=$4
+  text=" "text
+  tooltip="Filesystem: "$1" \\nSize: "$2"\\nUsed: "$3"\\nAvail: "$4"\\nUse%: "$5"\\nMounted on: "$6
+  use=$5
+  exit 0
+}
+END {
+  class=""
+  gsub(/%$/, "", use)
+  if ((100 - use) < critical) {
+    class="critical"
+  } else if ((100 - use) < warning) {
+    class="warning"
+  }
+  gsub(/"/, "\\\"", tooltip)
+  print "{\"text\":\""text"\", \"percentage\":"use", \"tooltip\":\""tooltip"\", \"class\":\""class"\"}"
+}
+'
+

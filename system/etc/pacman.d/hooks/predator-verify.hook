@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = linux-cachyos*
+Target = dkms
+
+[Action]
+Description = Checking the Predator fan driver was built for the new kernel...
+When = PostTransaction
+Exec = /bin/sh -c 'for k in /usr/lib/modules/*cachyos*/; do kv=$(basename $k); [ -d $k/build/include ] && ! dkms status linuwu_sense/1.0 -k $kv 2>/dev/null | grep -q installed && dkms install linuwu_sense/1.0 -k $kv; done; true'

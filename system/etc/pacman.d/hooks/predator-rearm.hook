@@ -1,0 +1,16 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = linux*
+Target = *dkms*
+Target = nvidia*
+Target = linuwu*
+Target = python
+Target = systemd
+Target = lact
+
+[Action]
+Description = Re-arming predator fan service...
+When = PostTransaction
+Exec = /bin/sh -c 'modprobe linuwu_sense 2>/dev/null; systemctl daemon-reload; systemctl try-restart predator.service lactd.service; true'

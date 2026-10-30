@@ -1,0 +1,3 @@
+ESP_PATH="/boot"
+KERNEL_CMDLINE[default]+="nowatchdog rw rootflags=subvol=/@ root=UUID=ee2bd8c9-5bc3-459e-8c76-eca5cb2f5498 resume=UUID=7f13a688-96cd-4a51-b3c4-fbb73bf740c2 sysrq_always_enabled=1 split_lock_detect=off nvidia.NVreg_PreserveVideoMemoryAllocations=1 nvidia_drm.modeset=1 nvidia_drm.fbdev=1 pcie_aspm=off nvidia.NVreg_EnableGpuFirmware=0 nvidia.NVreg_DynamicPowerManagement=0x00"
+BOOT_ORDER="*, *lts, *fallback, Snapshots"

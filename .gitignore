@@ -1,0 +1,5 @@
+*.log
+*.pickle
+__pycache__/
+*.bak*
+.cache/

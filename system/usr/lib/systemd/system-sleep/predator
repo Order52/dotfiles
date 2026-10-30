@@ -1,0 +1,6 @@
+#!/bin/sh
+case "$1" in
+  pre)  echo 0,0 > /sys/module/linuwu_sense/drivers/platform:acer-wmi/acer-wmi/predator_sense/fan_speed 2>/dev/null ;;
+  post) systemctl restart --no-block predator.service ;;
+esac
+exit 0

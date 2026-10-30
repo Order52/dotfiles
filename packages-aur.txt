@@ -1,0 +1,13 @@
+activate-linux
+containerlab-bin
+dualsensectl-git
+ente-auth-bin
+gapless
+kvantum-theme-breeze-git
+libre-menu-editor
+ludusavi-bin
+packettracer
+snappy-switcher
+vesktop
+wayscriber-bin
+wifi-qr
