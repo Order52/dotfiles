@@ -37,7 +37,7 @@ function onScroll(axis, steps)
   local level = tonumber(raw:match('"level"%s*:%s*(%d+)')) or 0
   local dir = raw:match('"direction"%s*:%s*(%d)')
   level = math.max(0, math.min(32, level + (steps > 0 and -2 or 2)))
-  local cmd = "rgbkb " .. effect .. (hex and (" " .. hex) or "") .. " --speed " .. math.floor(speed) .. " --level " .. level
+  local cmd = "kbd-rgb-send " .. effect .. (hex and (" " .. hex) or "") .. " --speed " .. math.floor(speed) .. " --level " .. level
   if effect == "wave" and dir then cmd = cmd .. " --direction " .. dir end
   run(cmd)
   noctalia.runAsync("noctalia msg osd-show keyboard 'Keyboard brightness: " .. level .. "/32'")
@@ -50,9 +50,9 @@ function onMiddleClick()
   noctalia.runAsync("noctalia msg osd-show keyboard 'Keyboard RGB: random'")
 end
 function onIpc(event, payload)
-  if event == "apply" then run("rgbkb apply")
+  if event == "apply" then run("kbd-rgb-send apply")
   elseif event == "random" then run("kbd-rgb random")
-  elseif event == "off" then run("rgbkb all 000000")
-  elseif event == "set" and payload then run("rgbkb " .. tostring(payload):gsub("[^%w%s#%-%.]", "")) end
+  elseif event == "off" then run("kbd-rgb-send all 000000")
+  elseif event == "set" and payload then run("kbd-rgb-send " .. tostring(payload):gsub("[^%w%s#%-%.]", "")) end
 end
 update()

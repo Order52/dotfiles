@@ -93,6 +93,7 @@ fsearch
 fwupd
 gamemode
 git
+github-cli
 glances
 gnome-calculator
 gnome-keyring

@@ -25,6 +25,7 @@ local COLORS = {
 local DIRS = { "→", "←", "↑", "↓", "↻", "↺" }
 
 local st = { effect = "wave", hex = "00AAFF", speed = 10, level = 0, dir = 1, more = false }
+local dragging = false        -- a slider is being dragged: don't overwrite it from the file
 
 local function load()
   local raw = noctalia.readFile(CONFIG) or ""
@@ -45,7 +46,7 @@ local function run(cmd)
 end
 
 local function apply()
-  local cmd = "rgbkb " .. st.effect
+  local cmd = "kbd-rgb-send " .. st.effect
   if hasColor(st.effect) then cmd = cmd .. " " .. st.hex end
   if st.effect ~= "all" then cmd = cmd .. " --speed " .. math.floor(st.speed) .. " --level " .. math.floor(st.level) end
   if st.effect == "wave" then cmd = cmd .. " --direction " .. st.dir end
@@ -188,10 +189,10 @@ end
 function onPickerLive(v) local h = parseHex(v); if h then st.hex = h end end    -- keep the value, no re-render while dragging
 function onPicker(v) local h = parseHex(v); if h then st.hex = h; apply() end end
 
-function onSpeed(v) st.speed = tonumber(v) or st.speed; render() end
-function onSpeedEnd(v) st.speed = tonumber(v) or st.speed; apply() end
-function onLevel(v) st.level = tonumber(v) or st.level; render() end
-function onLevelEnd(v) st.level = tonumber(v) or st.level; apply() end
+function onSpeed(v) dragging = true; st.speed = tonumber(v) or st.speed; render() end
+function onSpeedEnd(v) st.speed = tonumber(v) or st.speed; apply(); dragging = false end
+function onLevel(v) dragging = true; st.level = tonumber(v) or st.level; render() end
+function onLevelEnd(v) st.level = tonumber(v) or st.level; apply(); dragging = false end
 function onDir1() st.dir = 1; apply(); render() end
 function onDir2() st.dir = 2; apply(); render() end
 function onDir3() st.dir = 3; apply(); render() end
@@ -200,6 +201,25 @@ function onDir5() st.dir = 5; apply(); render() end
 function onDir6() st.dir = 6; apply(); render() end
 function onRandom() run("kbd-rgb random") end
 function onReapply() apply() end
-function onOff() run("rgbkb all 000000") end
+function onOff() run("kbd-rgb-send all 000000") end
 
-function onOpen() load(); st.more = false; render() end
+-- Live sync: keyboard brightness keys, the bar scroll, `kbd-rgb` and presets all change the saved config behind the panel's back,
+-- so while the panel is open a bounded ticker re-reads it once a second and redraws when it changed.
+local gen = 0
+local function snapshot() return st.effect .. "|" .. st.hex .. "|" .. st.speed .. "|" .. st.level .. "|" .. st.dir end
+function onOpen()
+  load(); st.more = false; dragging = false
+  gen = gen + 1
+  local mine = gen
+  local shown = nil
+  noctalia.runStream("for i in $(seq 600); do echo; sleep 1; done", function()
+    if mine ~= gen or dragging or st.more then return end
+    local before = snapshot()
+    load()
+    if snapshot() ~= before then
+      render()
+    end
+  end)
+  render()
+end
+function onClose() gen = gen + 1 end
