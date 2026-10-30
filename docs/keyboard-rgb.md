@@ -19,7 +19,7 @@ update the saved value, the panel and show Noctalia's keyboard-brightness popup 
 
 | Keys | Action |
 |---|---|
-| `Super + Alt + ]` / `=` / `Up` / `F12` | brightness up (step 4, range 0–32) |
+| `Super + Alt + ]` / `=` / `Up` / `F12` | brightness up (step 8, range 0–32; change it in `~/.config/rgbkb/brightness-step`) |
 | `Super + Alt + [` / `-` / `Down` / `F11` | brightness down |
 | `Super + Alt + K` | backlight off / back to the previous effect |
 | `XF86KbdBrightnessUp/Down/LightOnOff` | the same, for keyboards that send those keys |

@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """Keyboard backlight brightness for the Acer PH16-71 RGB keyboard (rgbkb).
-   kbd-rgb-brightness up | down | toggle | set N       (0-32, step 4)
+   kbd-rgb-brightness up | down | toggle | set N       (0-32, step 8)
 Bound in Hyprland to SUPER+ALT+F11/F12 (and Up/Down), SUPER+ALT+K for on/off, and the XF86Kbd* keys. Fn+F11/F12 are handled by the keyboard itself. 'toggle' turns the backlight off and back on to the previous effect."""
 import json, os, subprocess, sys, time
 from pathlib import Path
 
 CFG = Path.home() / ".config/rgbkb/config.json"
 PREV = Path.home() / ".cache/rgb-before-off.json"
-STEP, LO, HI = 4, 0, 32
+LO, HI = 0, 32
+def _step():
+    """Size of one press: ~/.config/rgbkb/brightness-step (default 8 -> four presses from dark to full). Try 12 or 16 for even bigger jumps."""
+    try:
+        return max(1, min(HI, int((Path.home() / ".config/rgbkb/brightness-step").read_text().strip())))
+    except (OSError, ValueError):
+        return 8
+STEP = _step()
 RGBKB = str(Path.home() / ".local/bin/rgbkb")
 
 def osd(text, icon="keyboard"):
