@@ -13,6 +13,11 @@ RGBKB = str(Path.home() / ".local/bin/rgbkb")
 def osd(text, icon="keyboard"):
     subprocess.Popen(["noctalia", "msg", "osd-show", icon, text], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+def level_osd(level):
+    """Noctalia's own keyboard-backlight OSD (icon + level bar), value in percent."""
+    subprocess.Popen(["noctalia", "msg", "keyboard-backlight-osd", str(round(level * 100 / HI))],
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
 def command(effect, p):
     cmd = [RGBKB, effect]
     if p.get("hexcolor"):
@@ -41,12 +46,12 @@ def main():
             prev = json.loads(PREV.read_text())
             run(command(prev["effect"], prev["params"]))
             PREV.unlink(missing_ok=True)
-            osd("Keyboard backlight: on")
+            level_osd(int(prev["params"].get("level", prev["params"].get("brightness", HI))) if prev["effect"] != "all" else HI)
         else:
             if cfg:
                 PREV.write_text(json.dumps(cfg))
             run([RGBKB, "all", "000000"])
-            osd("Keyboard backlight: off", "keyboard-off")
+            level_osd(0)
         return
 
     if not cfg:
@@ -63,6 +68,6 @@ def main():
         level = max(LO, min(HI, int(sys.argv[2])))
     p["level"] = level
     run(command(effect, p))
-    osd(f"Keyboard brightness: {level}/{HI}")
+    level_osd(level)
 
 main()
