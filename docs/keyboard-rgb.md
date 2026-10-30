@@ -19,6 +19,14 @@ previous effect). Script: `local-bin/kbd-rgb-brightness up|down|toggle|set N`; b
 If your key does nothing, run `wev` in a terminal, press it, and bind the keysym it shows to `kbd-rgb-brightness up` or `down`.
 A solid color (`all`) has no brightness setting, so use any other effect.
 
+### Fn+F11 / Fn+F12 (hardware brightness keys)
+
+On this keyboard Fn+F11 / Fn+F12 are not normal key events: the keyboard sends vendor reports (`04 7c ff` = Fn+F11, `04 7d ff` = Fn+F12) on its
+raw HID interface, so Hyprland never sees them. `local-bin/kbd-rgb-keys` (user service `kbd-rgb-keys.service`) listens for those reports and calls
+`kbd-rgb-brightness down/up`, which changes the saved brightness and shows Noctalia's keyboard-brightness popup with a level bar.
+It needs one udev rule so your user may read the keyboard's hidraw nodes: `sudo bash tools/install-keyboard-keys.sh`
+(done automatically by `./install.sh`). `tools/capture-keyboard-reports.sh` shows what a key sends if you want to map others.
+
 ## Change it — from a terminal
 
 ```bash

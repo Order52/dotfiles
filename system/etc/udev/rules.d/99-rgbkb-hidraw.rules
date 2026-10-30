@@ -1,0 +1,2 @@
+# Acer PH16-71 keyboard (Chicony 04f2:0117): let the logged-in user read its raw HID reports (Fn+F11/F12 brightness keys, kbd-rgb-keys)
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="04f2", ATTRS{idProduct}=="0117", TAG+="uaccess", MODE="0660", GROUP="plugdev"

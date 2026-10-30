@@ -72,6 +72,10 @@ else
   echo "  pipx not found: install python-pipx, then  pipx install third-party/rgbkb/ph16-71-rgb  (keyboard RGB)"
 fi
 
+if [ "$DRY" = 0 ] && command -v systemctl >/dev/null; then
+  systemctl --user daemon-reload 2>/dev/null; systemctl --user enable --now kbd-rgb-keys.service >/dev/null 2>&1 && echo "  Fn+F11/F12 brightness listener enabled" || true
+fi
+
 # the configs were written for user "sloppy"
 if [ "$HOME" != /home/sloppy ] && [ "$DRY" = 0 ]; then
   say "Rewriting /home/sloppy -> $HOME in copied configs"

@@ -1,0 +1,11 @@
+[Unit]
+Description=Acer keyboard Fn+F11/F12 -> RGB brightness (kbd-rgb-keys)
+After=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/kbd-rgb-keys
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target
