@@ -52,7 +52,7 @@ Existing configs are backed up to `~/dotfiles-backup-<date>` first. It is safe t
 | `system/` | mirror of the system files that get installed under `/etc` and `/usr` (limine cmdline and LACT profile are reference copies) |
 | `kde/`, `shell/` | KDE/Plasma settings, `.zshrc`/`.bashrc` |
 | `packages-official.txt`, `packages-aur.txt` | explicitly installed packages; `fonts.txt` lists installed fonts |
-| `tools/` | `test-predator.sh` (crash/recovery self-test), `apply-driver-update.sh` (rebuild/reload driver + daemon after pulling changes), `legacy-root-scripts/` |
+| `tools/` | `test-predator.sh` (crash/recovery self-test), `apply-driver-update.sh` (rebuild/reload driver + daemon after pulling changes), `harden-service.sh` (extra never-die settings), `legacy-root-scripts/` |
 
 ## After installing
 

@@ -56,6 +56,8 @@ install -m 755 local-bin/predator-daemon.py /usr/local/lib/predator/predator-dae
 install -m 755 system/usr/local/lib/predator/health.sh /usr/local/lib/predator/health.sh
 sed -i "s|sloppy|$U|g; s|/run/user/1000|/run/user/$UID_U|g" /usr/local/lib/predator/health.sh
 for f in predator.service predator-health.service predator-health.timer; do install -m 644 "system/etc/systemd/system/$f" /etc/systemd/system/; done
+install -d /etc/systemd/system/predator.service.d
+install -m 644 system/etc/systemd/system/predator.service.d/10-never-die.conf /etc/systemd/system/predator.service.d/
 sed -i "s|sloppy|$U|g" /etc/systemd/system/predator.service
 install -m 755 system/usr/lib/systemd/system-sleep/predator /usr/lib/systemd/system-sleep/predator
 install -d /etc/pacman.d/hooks
