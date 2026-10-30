@@ -3,7 +3,7 @@ name        = "Quick Toggles"
 version     = "1.0.0"
 plugin_api  = 3
 author      = "sloppy"
-description = "Bar buttons that show their live state: refresh rate (Hz), gamemode on/off, CPU governor, screen recorder."
+description = "Bar buttons that show their live state: refresh rate (Hz), gamemode on/off, CPU governor, screen recorder, fan, profile, RGB, blue light shield."
 
 [[widget]]
 id    = "refresh"
@@ -48,6 +48,10 @@ open_near_click = true
 [[widget]]
 id    = "rgb"
 entry = "rgb.luau"
+
+[[widget]]
+id    = "shield"
+entry = "shield.luau"
 
 [[panel]]
 id     = "rgb_panel"

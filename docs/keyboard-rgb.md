@@ -36,6 +36,13 @@ From a terminal: `kbd-backlight-timeout on | off | toggle | get`. It is a featur
 (it answers a query with an empty reply until it was set once), so the choice is saved in `~/.config/rgbkb/idle-off` and re-sent at login (`kbd-backlight-timeout apply` in `autostart.lua`).
 Protocol details are in [rear-rgb-wmi.md](rear-rgb-wmi.md). Not timed with a stopwatch yet: switch it on, leave the keyboard alone for 30 s and watch the backlight.
 
+## Blue light shield
+
+Acer's "Blue light shield" is software only, so here it is Noctalia's night light forced on at a warm colour temperature. The bar has a **shield button**
+(next to the RGB button): click = next level (Off → Low → Medium → High → Long hour), scroll = warmer/cooler, middle click = off. Terminal:
+`blue-light-shield get | set 0-4|off|low|medium|high|long|<kelvin> | cycle | up | down`. Levels are 4500 / 3800 / 3200 / 2800 K (approximations of Acer's, edit `LEVELS` in the script).
+Noctalia remembers the state across restarts. Files: `local-bin/blue-light-shield`, `local-share/noctalia-plugins/toggles/shield.luau`.
+
 ## Keyboard brightness keys
 
 **Fn+F11 / Fn+F12** are handled by the keyboard's own firmware (it changes the backlight by itself and tells the computer nothing useful),

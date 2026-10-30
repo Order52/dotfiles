@@ -48,7 +48,9 @@ so `set_mode` is only a fallback. Note: the mode table above is from Windows; th
   Set `30 01 <0|1> 00 00 00 00 <chk>`, query `b0 00 00 00 00 00 00 4f`, then read the report back (`b0 01 <flag> …`, hidraw's 9-byte buffer has report ID 0 in front);
   `chk = 0xFF - sum(first 7 bytes)`. On this laptop the keyboard answers an empty `b0 00 …` until the flag was written once after power-up; after that the reads matched the
   Windows notes (`… cd` for on, `… ce` for off). Write/read-back round trips verified; the actual 30 s timeout is not timed.
-* **Blue light shield** is software only (a colour matrix + gamma LUT loaded by Acer Quick Access), no firmware command. Use a software filter instead.
+* **Blue light shield** is software only (Acer Quick Access loads a colour matrix + gamma LUT; no firmware command). Implemented as `local-bin/blue-light-shield`
+  on top of Noctalia's night light (`nightlight.force` + `nightlight.temperature_night`): levels off / low 4500 K / medium 3800 K / high 3200 K / long hour 2800 K.
+  Acer's real per-level factors could not be recovered, so those temperatures are approximations; edit `LEVELS` in the script. Bar button: `shield.luau`.
 * PredatorSense's own rear OFF button probably uses `SetGamingLED` (method 2); untested. Brightness 0 is the verified off.
 * `SetGamingLEDBehavior` / `SetGamingLEDColor` (methods 10 / 12) belong to the logo LED path, not the rear light. Untested.
 * Windows captures: USB showed no lighting traffic at all, which is how the WMI path was found. The upstream `ph16-71-rgb` "Rear-RGB" pcapngs are OpenRGB network traffic, not USB.
