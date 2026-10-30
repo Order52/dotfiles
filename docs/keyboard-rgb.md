@@ -6,8 +6,9 @@ keyboard over USB. Everything you need is installed by `./install.sh`.
 
 ## Change it — from the Noctalia bar
 
-The bar has a **keyboard button** (shows the current effect, e.g. "Wave"). **Click** it for the RGB panel: effects, a color picker with
-swatches, speed, brightness, wave direction, and **Random / Reapply / Off**. Every change is applied instantly and saved. **Middle-click**
+The bar has a **keyboard button** (shows the current effect, e.g. "Wave"). **Click** it for the RGB panel: **8 one-click presets**
+(Cyber, Ocean, Lava, Matrix, Aurora, Sunset, Gaming, Chill), all effects, **quick color buttons** (plus a full color picker under
+"Custom color…"), speed, brightness, wave direction, **Random / Reapply**, and a backlight-off button. Every change is applied instantly and saved. **Middle-click**
 the button for a random effect, and **scroll** on it to change the keyboard brightness (0–32, with an on-screen readout). (Plugin: `local-share/noctalia-plugins/toggles/rgb.luau` + `rgb_panel.luau`.)
 
 ## Change it — from a terminal
