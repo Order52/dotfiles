@@ -54,7 +54,23 @@ end
 
 local function lbl(t, size) return ui.label({ text = t, fontSize = size or 12, color = "on_surface_variant" }) end
 
+local function renderPicker()
+  panel.render(ui.column({ gap = 12, padding = 16 }, {
+    ui.row({ gap = 10, align = "center" }, {
+      ui.button({ glyph = "arrow-left", text = "Back", variant = "ghost", controlSize = "sm", onClick = "onMore" }),
+      ui.column({ gap = 0, flexGrow = 1 }, {
+        ui.label({ text = "Custom color", fontSize = 18, color = "tertiary" }),
+        ui.label({ text = "#" .. st.hex .. "  ·  " .. (st.effect == "all" and "Solid" or st.effect), fontSize = 12, color = "on_surface_variant" }),
+      }),
+    }),
+    ui.colorPicker({ value = "#" .. st.hex, swatches = { "#FF0000", "#FF6A00", "#FFD000", "#00FF55", "#00FFD0", "#00AAFF", "#3A3AFF", "#B400FF", "#FF00AA", "#FFFFFF" },
+      onChange = "onPickerLive", onChangeEnd = "onPicker" }),
+    ui.button({ glyph = "check", text = "Done", variant = "default", onClick = "onMore" }),
+  }))
+end
+
 function render()
+  if st.more and hasColor(st.effect) then return renderPicker() end
   local body = {
     ui.row({ gap = 10, align = "center" }, {
       ui.glyph({ name = "keyboard", size = 26, color = "tertiary" }),
@@ -94,7 +110,7 @@ function render()
     end
     body[#body + 1] = ui.row({ gap = 4 }, c1)
     body[#body + 1] = ui.row({ gap = 4 }, c2)
-    body[#body + 1] = ui.button({ glyph = "palette", text = st.more and "Hide color picker" or "Custom color…", controlSize = "sm", variant = "ghost", onClick = "onMore" })
+    body[#body + 1] = ui.button({ glyph = "palette", text = "Custom color…", controlSize = "sm", variant = "ghost", onClick = "onMore" })
   end
 
   if st.effect ~= "all" then
@@ -117,9 +133,6 @@ function render()
     ui.button({ glyph = "refresh", text = "Reapply", flexGrow = 1, variant = "ghost", onClick = "onReapply" }),
   })
 
-  if st.more and hasColor(st.effect) then
-    body[#body + 1] = ui.colorPicker({ value = "#" .. st.hex, onChangeEnd = "onPicker" })
-  end
   panel.render(ui.column({ gap = 8, padding = 16 }, body))
 end
 
@@ -168,10 +181,12 @@ function onColor_8() color(8) end
 function onColor_9() color(9) end
 function onColor_10() color(10) end
 function onMore() st.more = not st.more; render() end
-function onPicker(v)
+local function parseHex(v)
   local h = tostring(v or ""):gsub("#", ""):sub(1, 6)
-  if #h == 6 then st.hex = h:upper(); apply() end
+  if #h == 6 and h:match("^%x+$") then return h:upper() end
 end
+function onPickerLive(v) local h = parseHex(v); if h then st.hex = h end end    -- keep the value, no re-render while dragging
+function onPicker(v) local h = parseHex(v); if h then st.hex = h; apply() end end
 
 function onSpeed(v) st.speed = tonumber(v) or st.speed; render() end
 function onSpeedEnd(v) st.speed = tonumber(v) or st.speed; apply() end
