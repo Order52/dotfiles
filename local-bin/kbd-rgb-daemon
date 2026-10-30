@@ -1,0 +1,121 @@
+#!/home/sloppy/.local/share/pipx/venvs/rgbkb/bin/python
+"""kbd-rgb-daemon — keeps the Acer keyboard's USB interface open while the RGB is being adjusted.
+
+`rgbkb` opens the interface, sends one command and releases it; every release makes the kernel re-probe the HID interface (the keyboard
+"reconnects"), so only ~2 changes a second are possible. This daemon claims the interface once and sends commands in milliseconds, which is
+what lets the brightness follow a held key live. After 3 s without commands it releases the interface, so plain `rgbkb` keeps working.
+
+Protocol: one JSON list of rgbkb arguments per line on $XDG_RUNTIME_DIR/kbd-rgb.sock, e.g. ["wave","--speed","10","--level","24"]; ["apply"].
+Replies "ok" or "error: ...". Everything runs through rgbkb's own CLI code, so the saved config stays correct.
+"""
+import io, json, os, socket, sys, threading, time
+from contextlib import redirect_stderr, redirect_stdout
+from pathlib import Path
+
+import click
+from usbx import RequestType, Recipient, TransferDirection
+import rgbkb.cli as rcli
+from rgbkb.acer_ph16_71.device import AcerPredatorPH1671 as Keyboard
+
+SOCK = os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"), "kbd-rgb.sock")
+IDLE_RELEASE = 3.0
+session = {"kb": None, "last": 0.0}
+lock = threading.Lock()
+
+
+def persistent_send(self, *commands):
+    """Replacement for RgbKeyboard.send_commands that keeps interface 3 claimed between calls."""
+    with lock:
+        kb = session["kb"]
+        if kb is None:
+            kb = self
+            kb.device.detach_standard_drivers()
+            kb.device.open()
+            kb.device.claim_interface(3)
+            kb.device.clear_halt(4, TransferDirection.OUT)
+            session["kb"] = kb
+        try:
+            for c in commands:
+                kb.send_control_transfer(9, 0x0300, 3, c, RequestType.CLASS, Recipient.INTERFACE)
+        except Exception:
+            release()                      # stale handle (keyboard replugged / rebound): next call opens a fresh one
+            raise
+        session["last"] = time.monotonic()
+
+
+def release():
+    kb, session["kb"] = session["kb"], None
+    if kb is not None:
+        for fn in (lambda: kb.device.release_interface(3), kb.device.close):
+            try:
+                fn()
+            except Exception:
+                pass
+
+
+def idle_watcher():
+    while True:
+        time.sleep(0.5)
+        with lock:
+            if session["kb"] is not None and time.monotonic() - session["last"] > IDLE_RELEASE:
+                release()
+
+
+def build_args(args):
+    """'apply' normally shells out to `rgbkb <effect>`; do the same thing in-process."""
+    if args == ["apply"]:
+        cfg = rcli.load_config()
+        if not cfg:
+            raise click.ClickException("No saved configuration found.")
+        out = [cfg["effect"]]
+        for k, v in cfg["params"].items():
+            if k == "hexcolor":
+                out.append(str(v))
+            elif k == "direction":
+                out += ["--direction", str(v)]
+            elif k == "speed":
+                out += ["--speed", str(v)]
+            elif k in ("brightness", "level"):
+                out += ["--level", str(v)]
+        return out
+    return args
+
+
+def handle(line: str) -> str:
+    try:
+        args = build_args(json.loads(line))
+        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            rcli.cli.main(args=args, prog_name="rgbkb", standalone_mode=False)
+        return "ok"
+    except SystemExit as e:
+        return "ok" if not e.code else f"error: exit {e.code}"
+    except Exception as e:
+        return f"error: {e}"
+
+
+def serve():
+    Keyboard.send_commands = persistent_send
+    try:
+        os.unlink(SOCK)
+    except FileNotFoundError:
+        pass
+    srv = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    srv.bind(SOCK)
+    os.chmod(SOCK, 0o600)
+    srv.listen(8)
+    threading.Thread(target=idle_watcher, daemon=True).start()
+    while True:
+        conn, _ = srv.accept()
+        with conn:
+            try:
+                data = conn.makefile("r").readline()
+                conn.sendall((handle(data) + "\n").encode())
+            except Exception as e:
+                try:
+                    conn.sendall(f"error: {e}\n".encode())
+                except OSError:
+                    pass
+
+
+if __name__ == "__main__":
+    serve()

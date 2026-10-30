@@ -24,8 +24,10 @@ update the saved value, the panel and show Noctalia's keyboard-brightness popup 
 | `Super + Alt + K` | backlight off / back to the previous effect |
 | `XF86KbdBrightnessUp/Down/LightOnOff` | the same, for keyboards that send those keys |
 
-Holding a key is fine: the new value is saved and shown at once, and the keyboard is only reprogrammed once you stop (every command makes the
-keyboard reconnect on USB, so one per burst). A solid color (`all`) has no brightness setting — use any other effect.
+**The brightness follows a held key live.** `kbd-rgb-daemon` (user service `kbd-rgb-daemon.service`) keeps the keyboard's USB interface open
+while you adjust, so each step takes ~20 ms and the keyboard does not reconnect; plain `rgbkb` reprograms the keyboard one command at a time
+(~0.5 s each, and every command makes it reconnect on USB). After 3 s idle the daemon lets go, so `rgbkb` still works by itself.
+`kbd-rgb-send <rgbkb args>` talks to the daemon (falls back to `rgbkb`); the Noctalia panel, `kbd-rgb` and the brightness keys all use it. A solid color (`all`) has no brightness setting — use any other effect.
 `tools/capture-keyboard-reports.sh` shows what a key sends (needs sudo).
 
 ## Change it — from a terminal

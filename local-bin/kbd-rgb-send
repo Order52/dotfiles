@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+"""kbd-rgb-send <rgbkb arguments>   e.g.  kbd-rgb-send wave --speed 10 --level 24    /   kbd-rgb-send apply
+Sends the command to kbd-rgb-daemon (fast, no keyboard reconnect); falls back to plain `rgbkb` if the daemon is not running."""
+import json, os, socket, subprocess, sys
+from pathlib import Path
+
+def send(args, timeout=3.0):
+    path = os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"), "kbd-rgb.sock")
+    try:
+        s = socket.socket(socket.AF_UNIX)
+        s.settimeout(timeout)
+        s.connect(path)
+        s.sendall((json.dumps(args) + "\n").encode())
+        reply = s.makefile().readline().strip()
+        s.close()
+        return reply
+    except OSError:
+        return None
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    reply = send(args)
+    if reply == "ok":
+        sys.exit(0)
+    if reply is None or reply.startswith("error"):                       # daemon missing or failed: do it the slow way
+        env = dict(os.environ, PATH=f"{Path.home()}/.local/bin:" + os.environ.get("PATH", ""))
+        sys.exit(subprocess.run([str(Path.home() / ".local/bin/rgbkb")] + args, env=env).returncode)

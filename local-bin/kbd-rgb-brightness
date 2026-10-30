@@ -28,6 +28,16 @@ def command(effect, p):
         cmd += ["--direction", str(p.get("direction", 1))]
     return cmd
 
+def daemon_apply(cfg):
+    """Fast path: the daemon applies in ~20 ms without a keyboard reconnect, so the brightness follows a held key live."""
+    sys.path.insert(0, str(Path.home() / ".local/bin"))
+    try:
+        from importlib.machinery import SourceFileLoader
+        mod = SourceFileLoader("kbd_rgb_send", str(Path.home() / ".local/bin/kbd-rgb-send")).load_module()
+        return mod.send(command(cfg["effect"], cfg["params"])[1:], timeout=1.0) == "ok"
+    except Exception:
+        return False
+
 def run(cmd):
     env = dict(os.environ, PATH=f"{Path.home()}/.local/bin:" + os.environ.get("PATH", ""))
     subprocess.run(cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -55,13 +65,15 @@ def main():
     if action == "toggle":
         if cfg and cfg.get("effect") == "all" and cfg["params"].get("hexcolor") == "000000" and PREV.exists():
             prev = json.loads(PREV.read_text())
-            run(command(prev["effect"], prev["params"]))
+            if not daemon_apply(prev):
+                run(command(prev["effect"], prev["params"]))
             PREV.unlink(missing_ok=True)
             level_osd(int(prev["params"].get("level", prev["params"].get("brightness", HI))) if prev["effect"] != "all" else HI)
         else:
             if cfg:
                 PREV.write_text(json.dumps(cfg))
-            run([RGBKB, "all", "000000"])
+            if not daemon_apply({"effect": "all", "params": {"hexcolor": "000000"}}):
+                run([RGBKB, "all", "000000"])
             level_osd(0)
         return
 
@@ -79,6 +91,8 @@ def main():
         level = max(LO, min(HI, int(sys.argv[2])))
     write_level(cfg, level)                 # saved + shown at once (panel / bar read this file)
     level_osd(level)
+    if daemon_apply(cfg):                   # live, every step
+        return
     token = f"{os.getpid()}-{time.time()}"
     TOKEN.write_text(token)
     subprocess.Popen([sys.executable, __file__, "--apply-later", token], start_new_session=True,

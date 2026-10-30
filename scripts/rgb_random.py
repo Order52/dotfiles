@@ -58,7 +58,8 @@ if capabilities.get("direction", False):
 
 # Execute the command
 try:
-    subprocess.run(["rgbkb"] + args, check=True)
+    import os
+    subprocess.run([os.path.expanduser("~/.local/bin/kbd-rgb-send")] + args, check=True)   # via kbd-rgb-daemon, falls back to rgbkb
     print(f"Applied: {effect_name} with args {args}")
 except subprocess.CalledProcessError:
     print("Failed to run rgbkb command.")
