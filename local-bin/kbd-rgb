@@ -1,0 +1,17 @@
+#!/bin/bash
+# Keyboard RGB control for the Acer Predator Helios 16 (PH16-71).
+#   kbd-rgb            interactive menu (pick effect, color, speed, brightness; saved + optional start-up service)
+#   kbd-rgb random     random effect and color
+#   kbd-rgb apply      re-apply the last saved effect
+#   kbd-rgb <effect> [HEXCOLOR] [--speed N] [--level 0-32]     e.g.  kbd-rgb breathe 00FFAA --speed 6 --level 20
+#   kbd-rgb off        keyboard backlight off (solid black)
+#   kbd-rgb list       list the effects
+RGBKB=${RGBKB:-$HOME/.local/bin/rgbkb}
+[ -x "$RGBKB" ] || RGBKB=$(command -v rgbkb) || { echo "rgbkb is not installed (pipx install third-party/rgbkb/ph16-71-rgb)"; exit 1; }
+case "${1:-menu}" in
+  menu)   if [ -t 0 ]; then exec python3 "$HOME/.scripts/rgb_menu.py"; else exec "${TERMINAL:-alacritty}" -e python3 "$HOME/.scripts/rgb_menu.py"; fi ;;
+  random) exec python3 "$HOME/.scripts/rgb_random.py" ;;
+  off)    exec "$RGBKB" all 000000 ;;
+  list)   exec "$RGBKB" --help ;;
+  *)      exec "$RGBKB" "$@" ;;
+esac

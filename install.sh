@@ -65,6 +65,13 @@ run rsync -a kde/color-schemes/ "$HOME/.local/share/color-schemes/" 2>/dev/null 
 run rsync -a kde/konsole/ "$HOME/.local/share/konsole/" 2>/dev/null || true
 for f in kde/*; do [ -f "$f" ] && run cp "$f" "$HOME/.config/$(basename "$f")"; done
 
+if command -v pipx >/dev/null; then
+  say "Keyboard RGB tool (rgbkb)"
+  run pipx install --force "$REPO/third-party/rgbkb/ph16-71-rgb" >/dev/null 2>&1 && echo "  rgbkb installed; try:  kbd-rgb" || echo "  (pipx install failed - run: pipx install third-party/rgbkb/ph16-71-rgb)"
+else
+  echo "  pipx not found: install python-pipx, then  pipx install third-party/rgbkb/ph16-71-rgb  (keyboard RGB)"
+fi
+
 # the configs were written for user "sloppy"
 if [ "$HOME" != /home/sloppy ] && [ "$DRY" = 0 ]; then
   say "Rewriting /home/sloppy -> $HOME in copied configs"

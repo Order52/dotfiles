@@ -37,6 +37,12 @@ install -m 644 system/etc/systemd/system/linuwu_sense.service /etc/systemd/syste
 systemd-tmpfiles --create /etc/tmpfiles.d/linuwu_sense.conf /etc/tmpfiles.d/acer-platform-profile.conf /etc/tmpfiles.d/predator-tuning.conf 2>/dev/null
 ok "permissions: group linuwu_sense can set fan speed, profile, CPU clocks and power limits (log out/in for the group)"
 
+# ------------------------------------------------------------------ keyboard RGB
+step "Keyboard RGB (rgbkb, USB 04f2:0117)"
+install -m 644 system/etc/udev/rules.d/99-rgbkb.rules /etc/udev/rules.d/
+udevadm control --reload 2>/dev/null; udevadm trigger --subsystem-match=usb 2>/dev/null
+ok "udev rule installed (your user can control the keyboard backlight without root)"
+
 # ------------------------------------------------------------------ sleep / NVIDIA
 step "Sleep and NVIDIA"
 if lspci 2>/dev/null | grep -qi nvidia; then
