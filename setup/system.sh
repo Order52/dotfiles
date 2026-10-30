@@ -40,8 +40,7 @@ ok "permissions: group linuwu_sense can set fan speed, profile, CPU clocks and p
 # ------------------------------------------------------------------ keyboard RGB
 step "Keyboard RGB (rgbkb, USB 04f2:0117)"
 install -m 644 system/etc/udev/rules.d/99-rgbkb.rules /etc/udev/rules.d/
-install -m 644 system/etc/udev/rules.d/99-rgbkb-hidraw.rules /etc/udev/rules.d/
-udevadm control --reload 2>/dev/null; udevadm trigger --subsystem-match=usb 2>/dev/null; udevadm trigger --subsystem-match=hidraw --action=change 2>/dev/null
+udevadm control --reload 2>/dev/null; udevadm trigger --subsystem-match=usb 2>/dev/null
 ok "udev rule installed (your user can control the keyboard backlight without root)"
 
 # ------------------------------------------------------------------ sleep / NVIDIA

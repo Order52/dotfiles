@@ -13,19 +13,20 @@ the button for a random effect, and **scroll** on it to change the keyboard brig
 
 ## Keyboard brightness keys
 
-The keyboard's backlight keys change the RGB brightness (step 4, range 0–32, with an on-screen readout):
-`XF86KbdBrightnessUp` / `XF86KbdBrightnessDown` (the "keyboard light" keys) and `XF86KbdLightOnOff` (backlight off / back to the
-previous effect). Script: `local-bin/kbd-rgb-brightness up|down|toggle|set N`; binds in `config/hypr/config/keybinds.lua`.
-If your key does nothing, run `wev` in a terminal, press it, and bind the keysym it shows to `kbd-rgb-brightness up` or `down`.
-A solid color (`all`) has no brightness setting, so use any other effect.
+**Fn+F11 / Fn+F12** are handled by the keyboard's own firmware (it changes the backlight by itself and tells the computer nothing useful),
+so software cannot hook them without fighting the keyboard. Use these Hyprland keys instead — they go through `kbd-rgb-brightness`,
+update the saved value, the panel and show Noctalia's keyboard-brightness popup (level bar):
 
-### Fn+F11 / Fn+F12 (hardware brightness keys)
+| Keys | Action |
+|---|---|
+| `Super + Alt + F12` or `Super + Alt + Up` | brightness up (step 4, range 0–32) |
+| `Super + Alt + F11` or `Super + Alt + Down` | brightness down |
+| `Super + Alt + K` | backlight off / back to the previous effect |
+| `XF86KbdBrightnessUp/Down/LightOnOff` | the same, for keyboards that send those keys |
 
-On this keyboard Fn+F11 / Fn+F12 are not normal key events: the keyboard sends vendor reports (`04 7c ff` = Fn+F11, `04 7d ff` = Fn+F12) on its
-raw HID interface, so Hyprland never sees them. `local-bin/kbd-rgb-keys` (user service `kbd-rgb-keys.service`) listens for those reports and calls
-`kbd-rgb-brightness down/up`, which changes the saved brightness and shows Noctalia's keyboard-brightness popup with a level bar.
-It needs one udev rule so your user may read the keyboard's hidraw nodes: `sudo bash tools/install-keyboard-keys.sh`
-(done automatically by `./install.sh`). `tools/capture-keyboard-reports.sh` shows what a key sends if you want to map others.
+Holding a key is fine: the new value is saved and shown at once, and the keyboard is only reprogrammed once you stop (every command makes the
+keyboard reconnect on USB, so one per burst). A solid color (`all`) has no brightness setting — use any other effect.
+`tools/capture-keyboard-reports.sh` shows what a key sends (needs sudo).
 
 ## Change it — from a terminal
 

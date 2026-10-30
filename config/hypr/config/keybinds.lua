@@ -153,6 +153,12 @@ bind("XF86MonBrightnessDown", noct("brightness-down"), rl)
 bind("XF86KbdBrightnessUp",   exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true, locked = true }, "Keyboard RGB brightness up")
 bind("XF86KbdBrightnessDown", exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true, locked = true }, "Keyboard RGB brightness down")
 bind("XF86KbdLightOnOff",     exec("~/.local/bin/kbd-rgb-brightness toggle"), { locked = true }, "Keyboard RGB backlight on/off")
+-- Own keys (the hardware Fn+F11/F12 are handled by the keyboard itself): Super+Alt+F11/F12 or Up/Down, Super+Alt+K = on/off
+bind("SUPER + ALT + F12",  exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
+bind("SUPER + ALT + F11",  exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
+bind("SUPER + ALT + Up",   exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
+bind("SUPER + ALT + Down", exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
+bind("SUPER + ALT + K",    exec("~/.local/bin/kbd-rgb-brightness toggle"), nil, "Keyboard RGB backlight on/off")
 
 -- ── Lock ────────────────────────────────────────────────────────
 bind(mainMod .. " + SHIFT + X", exec("swaylock-fancy -e -K -p 10 -f Hack-Regular"), nil, "Lock the screen")

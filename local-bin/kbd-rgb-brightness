@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Keyboard backlight brightness for the Acer PH16-71 RGB keyboard (rgbkb).
    kbd-rgb-brightness up | down | toggle | set N       (0-32, step 4)
-Bound to XF86KbdBrightnessUp/Down/LightOnOff in Hyprland. 'toggle' turns the backlight off and back on to the previous effect."""
-import fcntl, json, os, subprocess, sys
+Bound in Hyprland to SUPER+ALT+F11/F12 (and Up/Down), SUPER+ALT+K for on/off, and the XF86Kbd* keys. Fn+F11/F12 are handled by the keyboard itself. 'toggle' turns the backlight off and back on to the previous effect."""
+import json, os, subprocess, sys, time
 from pathlib import Path
 
 CFG = Path.home() / ".config/rgbkb/config.json"
@@ -32,13 +32,24 @@ def run(cmd):
     env = dict(os.environ, PATH=f"{Path.home()}/.local/bin:" + os.environ.get("PATH", ""))
     subprocess.run(cmd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+TOKEN = Path("/tmp/kbd-rgb-brightness.token")
+APPLY_DELAY = 0.35        # s of silence before the keyboard is actually reprogrammed
+
+def write_level(cfg, level):
+    cfg["params"]["level"] = level
+    CFG.write_text(json.dumps(cfg))
+
+def apply_later(token):
+    """Key repeat sends many steps; every rgbkb command makes the keyboard reconnect on USB, so only the LAST step of a burst is applied."""
+    time.sleep(APPLY_DELAY)
+    if TOKEN.exists() and TOKEN.read_text() == token and CFG.exists():
+        cfg = json.loads(CFG.read_text())
+        run(command(cfg["effect"], cfg["params"]))
+
 def main():
     action = sys.argv[1] if len(sys.argv) > 1 else "up"
-    lock = open("/tmp/kbd-rgb-brightness.lock", "w")
-    try:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)      # key repeat: skip while a previous step is still talking to the keyboard
-    except OSError:
-        return
+    if action == "--apply-later":
+        return apply_later(sys.argv[2])
     cfg = json.loads(CFG.read_text()) if CFG.exists() else None
 
     if action == "toggle":
@@ -66,8 +77,11 @@ def main():
         level = max(LO, level - STEP)
     elif action == "set" and len(sys.argv) > 2:
         level = max(LO, min(HI, int(sys.argv[2])))
-    p["level"] = level
-    run(command(effect, p))
+    write_level(cfg, level)                 # saved + shown at once (panel / bar read this file)
     level_osd(level)
+    token = f"{os.getpid()}-{time.time()}"
+    TOKEN.write_text(token)
+    subprocess.Popen([sys.executable, __file__, "--apply-later", token], start_new_session=True,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 main()
