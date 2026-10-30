@@ -159,6 +159,11 @@ bind("SUPER + ALT + F11",  exec("~/.local/bin/kbd-rgb-brightness down"), { repea
 bind("SUPER + ALT + Up",   exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
 bind("SUPER + ALT + Down", exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
 bind("SUPER + ALT + K",    exec("~/.local/bin/kbd-rgb-brightness toggle"), nil, "Keyboard RGB backlight on/off")
+-- letter/punctuation keys cannot be swallowed by the keyboard's Fn row: Super+Alt+[ / ]  and  Super+Alt+- / =
+bind("SUPER + ALT + bracketright", exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
+bind("SUPER + ALT + bracketleft",  exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
+bind("SUPER + ALT + equal",        exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
+bind("SUPER + ALT + minus",        exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
 
 -- ── Lock ────────────────────────────────────────────────────────
 bind(mainMod .. " + SHIFT + X", exec("swaylock-fancy -e -K -p 10 -f Hack-Regular"), nil, "Lock the screen")

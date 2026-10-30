@@ -19,10 +19,13 @@ update the saved value, the panel and show Noctalia's keyboard-brightness popup 
 
 | Keys | Action |
 |---|---|
-| `Super + Alt + F12` or `Super + Alt + Up` | brightness up (step 4, range 0–32) |
-| `Super + Alt + F11` or `Super + Alt + Down` | brightness down |
+| `Super + Alt + ]` / `=` / `Up` / `F12` | brightness up (step 4, range 0–32) |
+| `Super + Alt + [` / `-` / `Down` / `F11` | brightness down |
 | `Super + Alt + K` | backlight off / back to the previous effect |
 | `XF86KbdBrightnessUp/Down/LightOnOff` | the same, for keyboards that send those keys |
+
+On this keyboard the F-row sends its special function (brightness etc.) instead of a plain F11/F12 unless Fn is held, so the F11/F12 variants may
+never reach Hyprland — use `]` `[` `=` `-` or the arrow keys.
 
 **The brightness follows a held key live.** `kbd-rgb-daemon` (user service `kbd-rgb-daemon.service`) keeps the keyboard's USB interface open
 while you adjust, so each step takes ~20 ms and the keyboard does not reconnect; plain `rgbkb` reprograms the keyboard one command at a time
