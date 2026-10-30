@@ -22,7 +22,25 @@ function update()
   barWidget.setTooltip({
     { "Keyboard RGB", effect and (NAMES[effect] or effect) or "not set" },
     { "Color", hex and ("#" .. hex:upper()) or "-" },
-    { "Click", "RGB panel" }, { "Middle click", "random effect" } })
+    { "Click", "RGB panel" }, { "Scroll", "brightness" }, { "Middle click", "random effect" } })
+end
+
+-- scroll on the button = brightness (0-32) of the current effect
+local lastScroll = 0
+function onScroll(axis, steps)
+  if axis ~= "vertical" or steps == 0 then return end
+  local raw = noctalia.readFile(CONFIG) or ""
+  local effect = raw:match('"effect"%s*:%s*"(%w+)"')
+  if not effect or effect == "all" then return end
+  local hex = raw:match('"hexcolor"%s*:%s*"(%x+)"')
+  local speed = tonumber(raw:match('"speed"%s*:%s*([%d%.]+)')) or 10
+  local level = tonumber(raw:match('"level"%s*:%s*(%d+)')) or 0
+  local dir = raw:match('"direction"%s*:%s*(%d)')
+  level = math.max(0, math.min(32, level + (steps > 0 and -2 or 2)))
+  local cmd = "rgbkb " .. effect .. (hex and (" " .. hex) or "") .. " --speed " .. math.floor(speed) .. " --level " .. level
+  if effect == "wave" and dir then cmd = cmd .. " --direction " .. dir end
+  run(cmd)
+  noctalia.runAsync("noctalia msg osd-show keyboard 'Keyboard brightness: " .. level .. "/32'")
 end
 
 function onClick() noctalia.togglePanel(PANEL) end

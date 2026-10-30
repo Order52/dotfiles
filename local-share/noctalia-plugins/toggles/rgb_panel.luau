@@ -51,14 +51,10 @@ function render()
     }),
     ui.column({ gap = 4 }, effRows),
   }
-  if hasColor(st.effect) then
-    body[#body + 1] = ui.label({ text = "Color", fontSize = 12, color = "on_surface_variant" })
-    body[#body + 1] = ui.colorPicker({ value = "#" .. st.hex, swatches = SWATCHES, onChangeEnd = "onColor" })
-  end
   if st.effect ~= "all" then
     body[#body + 1] = ui.label({ text = "Speed " .. math.floor(st.speed), fontSize = 12, color = "on_surface_variant" })
     body[#body + 1] = ui.slider({ min = 1, max = 11, step = 1, value = st.speed, controlSize = "md", onChange = "onSpeed", onDragEnd = "onSpeedEnd" })
-    body[#body + 1] = ui.label({ text = "Brightness " .. math.floor(st.level) .. " (0 = default)", fontSize = 12, color = "on_surface_variant" })
+    body[#body + 1] = ui.label({ text = "Brightness " .. math.floor(st.level) .. " / 32", fontSize = 12, color = "on_surface_variant" })
     body[#body + 1] = ui.slider({ min = 0, max = 32, step = 1, value = st.level, controlSize = "md", onChange = "onLevel", onDragEnd = "onLevelEnd" })
   end
   if st.effect == "wave" then
@@ -74,6 +70,10 @@ function render()
     ui.button({ glyph = "refresh", text = "Reapply", flexGrow = 1, variant = "ghost", onClick = "onReapply" }),
     ui.button({ glyph = "bulb-off", text = "Off", flexGrow = 1, variant = "ghost", onClick = "onOff" }),
   })
+  if hasColor(st.effect) then
+    body[#body + 1] = ui.label({ text = "Color", fontSize = 12, color = "on_surface_variant" })
+    body[#body + 1] = ui.colorPicker({ value = "#" .. st.hex, swatches = SWATCHES, onChangeEnd = "onColor" })
+  end
   panel.render(ui.column({ gap = 10, padding = 16 }, body))
 end
 
