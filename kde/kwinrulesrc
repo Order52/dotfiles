@@ -1,0 +1,25 @@
+[2a7c5c40-ef1d-4167-8d6d-76e3c1e9cb8e]
+Description=Application settings for mpv
+size=832,548
+sizerule=3
+wmclass=mpv
+wmclassmatch=1
+
+[General]
+count=2
+rules=2a7c5c40-ef1d-4167-8d6d-76e3c1e9cb8e,dbbcfbe8-c3e0-42a5-b617-20831d7f0de6
+
+[dbbcfbe8-c3e0-42a5-b617-20831d7f0de6]
+Description=Application settings for com.github.neithern.g4music
+above=true
+aboverule=2
+opacityactiverule=2
+opacityinactive=80
+opacityinactiverule=2
+position=2220,1064
+positionrule=3
+size=340,536
+sizerule=3
+wmclass=g4music com.github.neithern.g4music
+wmclasscomplete=true
+wmclassmatch=1

@@ -1,0 +1,59 @@
+MenuBar=Disabled
+
+[CompactMode]
+IconSize=22
+
+[ContextMenu]
+ShowCopyToOtherSplitView=false
+ShowDuplicateHere=false
+ShowMoveToOtherSplitView=false
+ShowOpenInNewTab=false
+ShowOpenInNewWindow=false
+ShowViewMode=false
+
+[DetailsMode]
+IconSize=22
+
+[ExtractDialog]
+2560x1600 screen: Height=1600
+2560x1600 screen: Width=2560
+
+[General]
+ConfirmClosingTerminalRunningProgram=false
+DoubleClickViewAction=view_redisplay
+FilterBar=true
+ShowFullPathInTitlebar=true
+ShowStatusBar=FullWidth
+UseTabForSwitchingSplitView=true
+Version=202
+ViewPropsTimestamp=2025,6,18,15,18,47.951
+
+[IconsMode]
+IconSize=64
+MaximumTextLines=0
+PreviewSize=128
+
+[InformationPanel]
+dateFormat=ShortFormat
+
+[KFileDialog Settings]
+Places Icons Auto-resize=false
+Places Icons Static Size=32
+
+[MainWindow]
+MenuBar=Disabled
+
+[Notification Messages]
+ConfirmOpenManyTerminals=false
+ConfirmRenameFileType=false
+ShowPasteHugeTextWarning=false
+warnAboutRisksBeforeActingAsAdmin=false
+
+[PlacesPanel]
+IconSize=32
+
+[PreviewSettings]
+Plugins=ffmpegthumbnailer,appimagethumbnail,audiothumbnail,glycin-heif,blenderthumbnail,comicbookthumbnail,cursorthumbnail,djvuthumbnail,ebookthumbnail,exrthumbnail,directorythumbnail,fontthumbnail,imagethumbnail,glycin-image-rs,jpegthumbnail,glycin-jxl,kraorathumbnail,windowsexethumbnail,windowsimagethumbnail,mobithumbnail,opendocumentthumbnail,gsthumbnail,rawthumbnail,glycin-svg,svgthumbnail,textthumbnail,ffmpegthumbs,exe-thumbnailer,gsf-office
+
+[UiSettings]
+ColorScheme=BreezeBlack

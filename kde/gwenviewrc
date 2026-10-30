@@ -1,0 +1,33 @@
+[General]
+LastUsedVersion=210800
+SideBarPage=operations
+
+[MainWindow]
+MenuBar=Disabled
+
+[Recent Files]
+File1[$e]=/mnt/sloppy_tux/My Files/My Phone/Teeba/Drawings/[1774972142] 31 Mar 2026 at 18-49.webp
+File10[$e]=/mnt/sloppy_tux/My Files/My Phone/Tfolder/convert/pp/new one/photo_2026-03-29_11-47-19_sticker.webp
+File2[$e]=$HOME/Downloads/eng-teddy/pp/eng_tedy_1726682340_3459984704938360003_69090712461.webp
+File3[$e]=/mnt/sloppy_tux/My Files/My Phone/Teeba/Drawings/More/pp/[1774971222] 31 Mar 2026 at 18-33_sticker.webp
+File4[$e]=/mnt/sloppy_tux/My Files/My Phone/Teeba/Drawings/More/pp/photo_2026-06-10_20-51-50_sticker.webp
+File5[$e]=/mnt/sloppy_tux/My Files/My Phone/Teeba/Drawings/More/pp/Untitled130_20260610181039_sticker.webp
+File6[$e]=/mnt/sloppy_tux/My Files/My Phone/Tfolder/convert/eng_tedy_3819541687941242427.jpg.webp
+File7[$e]=/mnt/sloppy_tux/My Files/My Phone/Tfolder/convert/eng_tedy_3711462605442314667.jpg.webp
+File8[$e]=/mnt/sloppy_tux/My Files/My Phone/Tfolder/convert/pp/p2/IMG_20260208_223224_968_sticker.webp
+File9[$e]=/mnt/sloppy_tux/My Files/My Phone/Tfolder/convert/pp/eng_tedy_3459984704929916494.jpg.webp
+Name1[$e]=[1774972142] 31 Mar 2026 at 18-49.webp
+Name10[$e]=photo_2026-03-29_11-47-19_sticker.webp
+Name2[$e]=eng_tedy_1726682340_3459984704938360003_69090712461.webp
+Name3[$e]=[1774971222] 31 Mar 2026 at 18-33_sticker.webp
+Name4[$e]=photo_2026-06-10_20-51-50_sticker.webp
+Name5[$e]=Untitled130_20260610181039_sticker.webp
+Name6[$e]=eng_tedy_3819541687941242427.jpg.webp
+Name7[$e]=eng_tedy_3711462605442314667.jpg.webp
+Name8[$e]=IMG_20260208_223224_968_sticker.webp
+Name9[$e]=eng_tedy_3459984704929916494.jpg.webp
+
+[SideBar]
+InformationSplitterSizes=220,255
+IsVisible ViewMode=true
+SideBarSplitterSizes=159,500

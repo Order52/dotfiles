@@ -1,0 +1,21 @@
+[Keyboard]
+NumLock=0
+RepeatDelay=250
+RepeatRate=30
+
+[Libinput][1356][3302][Sony Interactive Entertainment DualSense Wireless Controller Touchpad]
+Enabled=true
+
+[Libinput][1739][52911][SYNA7DB5:00 06CB:CEAF Touchpad]
+Enabled=true
+NaturalScroll=true
+PointerAcceleration=0.400
+PointerAccelerationProfile=1
+ScrollFactor=0.5
+
+[Libinput][7847][100][2.4G Mouse]
+PointerAcceleration=0.600
+PointerAccelerationProfile=1
+
+[Mouse]
+cursorTheme=breeze_cursors

@@ -1,0 +1,39 @@
+[Desktop Entry]
+FullScreen=true
+shouldShowMenuBarComingFromFullScreen=false
+shouldShowToolBarComingFromFullScreen=false
+
+[General]
+LockSidebar=true
+ShowSidebar=true
+
+[MainWindow]
+MenuBar=Disabled
+
+[Notification Messages]
+presentationInfo=false
+
+[Recent Files]
+File1[$e]=$HOME/Downloads/AyuGram Desktop/LAB4_DSP.pdf
+File10[$e]=$HOME/Downloads/eve/ubuntu-22-04-20221028.yaml
+File2[$e]=$HOME/Downloads/AyuGram Desktop/LAB5_DSP.pdf
+File3[$e]=$HOME/Downloads/your_cv-3.pdf
+File4[$e]=/mnt/sloppy_tux/My Files/My Computer/Courses/Network/PDF/Huawei HCIA/Datacom/HCIA-Datacom V1.0 Training Material_compressed.pdf
+File5[$e]=/mnt/sloppy_tux/My Files/My Computer/Courses/Network/PDF/Huawei HCIA/Datacom/HCIA-Datacom V1.0 Lab Guide.pdf
+File6[$e]=/mnt/sloppy_tux/My Files/My Computer/Courses/Network/PDF/Huawei HCIA/Datacom/HCIA-Datacom V1.0 Training Material.pdf
+File7[$e]=/mnt/sloppy_tux/My Files/My Computer/Courses/Network/Pkt (Packet Tracer LAB)/Network-design.pdf
+File8[$e]=/mnt/sloppy_tux/My Files/My Computer/Courses/Network/Pkt (Packet Tracer LAB)/IT Support Specialist Task - Ali Alakbar.pdf
+File9[$e]=/run/media/veracrypt1/docs/Me/Intionational Card (Mine).pdf
+Name1[$e]=LAB4_DSP.pdf
+Name10[$e]=ubuntu-22-04-20221028.yaml
+Name2[$e]=LAB5_DSP.pdf
+Name3[$e]=your_cv-3.pdf
+Name4[$e]=HCIA-Datacom V1.0 Training Material_compressed.pdf
+Name5[$e]=HCIA-Datacom V1.0 Lab Guide.pdf
+Name6[$e]=HCIA-Datacom V1.0 Training Material.pdf
+Name7[$e]=Network-design.pdf
+Name8[$e]=IT Support Specialist Task - Ali Alakbar.pdf
+Name9[$e]=Intionational Card (Mine).pdf
+
+[UiSettings]
+ColorScheme=BreezeBlack

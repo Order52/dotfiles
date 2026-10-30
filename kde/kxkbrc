@@ -1,0 +1,8 @@
+[Layout]
+DisplayNames=,
+LayoutList=us,ara
+Model=acer_laptop
+Options=caps:swapescape,grp_led:caps
+ResetOldOptions=true
+Use=true
+VariantList=,
