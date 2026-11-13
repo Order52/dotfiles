@@ -41,10 +41,15 @@ function update()
   noctalia.setUpdateInterval(2000)
   local p = current()
   local m = p and INFO[p]
+  if not p then                   -- no ACPI platform_profile on this machine: hide the button
+    barWidget.setVisible(false)
+    return
+  end
+  barWidget.setVisible(true)
   if not m then
-    barWidget.setGlyph("gauge") barWidget.setText(p and p:upper():sub(1, 5) or "N/A")
+    barWidget.setGlyph("gauge") barWidget.setText(p:upper():sub(1, 5))
     barWidget.setColor("on_surface_variant") barWidget.setGlyphColor("on_surface_variant")
-    barWidget.setTooltip("Platform profile unavailable")
+    barWidget.setTooltip({ { "Platform profile", p } })
     return
   end
   local auto = autoOn()

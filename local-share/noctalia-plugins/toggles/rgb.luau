@@ -7,12 +7,28 @@ local NAMES  = { wave = "Wave", neon = "Neon", all = "Solid", breathe = "Breathe
                  heartbeat = "Pulse", snow = "Snow", fireball = "Fire", stars = "Stars", spot = "Spot",
                  lightning = "Bolt", rain = "Rain" }
 
+
+-- Only shown when rgbkb is installed and the RGB keyboard (USB 04f2:0117) or the rear light (/dev/acer-rear) exists. Re-checked every 30 s, so it appears once installed.
+local NEEDS = [=[[ -x "$HOME/.local/bin/rgbkb" ] || exit 1; [ -e /dev/acer-rear ] && exit 0; for d in /sys/bus/usb/devices/*; do [ "$(cat $d/idVendor $d/idProduct 2>/dev/null | tr -d "\n")" = 04f20117 ] && exit 0; done; exit 1]=]
+local supported, checkedAt = false, -1e9
+local function checkSupport()
+  if os.time() - checkedAt < 30 then return end
+  checkedAt = os.time()
+  noctalia.runAsync("sh -c '" .. NEEDS .. "'", function(r)
+    supported = r ~= nil and r.exitCode == 0
+    barWidget.setVisible(supported)
+    if supported then update() end
+  end)
+end
+
 local function run(cmd)
   noctalia.runAsync("sh -c 'PATH=$HOME/.local/bin:$PATH " .. cmd .. "'")
 end
 
 function update()
   noctalia.setUpdateInterval(3000)
+  checkSupport()
+  if not supported then return end
   local raw = noctalia.readFile(CONFIG) or ""
   local effect = raw:match('"effect"%s*:%s*"(%w+)"')
   local hex = raw:match('"hexcolor"%s*:%s*"(%x+)"')
@@ -62,4 +78,5 @@ function onIpc(event, payload)
   elseif event == "off" then run("kbd-rgb-send all 000000")
   elseif event == "set" and payload then run("kbd-rgb-send " .. tostring(payload):gsub("[^%w%s#%-%.]", "")) end
 end
+barWidget.setVisible(false)   -- hidden until the support check passes
 update()

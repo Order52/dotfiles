@@ -38,10 +38,10 @@ Protocol details are in [rear-rgb-wmi.md](rear-rgb-wmi.md). Not timed with a sto
 
 ## Blue light shield
 
-Acer's "Blue light shield" is software only, so here it is Noctalia's night light forced on at a warm colour temperature. The bar has a **shield button**
-(next to the RGB button): click = next level (Off → Low → Medium → High → Long hour), scroll = warmer/cooler, middle click = off. Terminal:
+Acer's "Blue light shield" is software only, so here it is Noctalia's night light forced on at a warm colour temperature. Switch it on and off with the
+**Night light** tile in the Control Center (right-click the bar); it uses the level last chosen. Pick the level from a terminal:
 `blue-light-shield get | set 0-4|off|low|medium|high|long|<kelvin> | cycle | up | down`. Levels are 4500 / 3800 / 3200 / 2800 K (approximations of Acer's, edit `LEVELS` in the script).
-Noctalia remembers the state across restarts. Files: `local-bin/blue-light-shield`, `local-share/noctalia-plugins/toggles/shield.luau`.
+Noctalia remembers the state across restarts. File: `local-bin/blue-light-shield`.
 
 ## Keyboard brightness keys
 

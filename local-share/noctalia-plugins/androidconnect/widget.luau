@@ -4,6 +4,20 @@
 local CLI   = noctalia.expandPath("~/.local/bin/androidconnect")
 local PANEL = "sloppy/androidconnect:panel"
 
+
+-- Only shown when the androidconnect CLI and KDE Connect are installed. Re-checked every 30 s, so it appears once installed.
+local NEEDS = [=[[ -x "$HOME/.local/bin/androidconnect" ] && command -v kdeconnect-cli && command -v kdeconnectd]=]
+local supported, checkedAt = false, -1e9
+local function checkSupport()
+  if os.time() - checkedAt < 30 then return end
+  checkedAt = os.time()
+  noctalia.runAsync("sh -c '" .. NEEDS .. "'", function(r)
+    supported = r ~= nil and r.exitCode == 0
+    barWidget.setVisible(supported)
+    if supported then update() end
+  end)
+end
+
 local function parse(out)
   for line in (out or ""):gmatch("[^\n]+") do
     local f = {}
@@ -48,6 +62,8 @@ end
 
 function update()
   noctalia.setUpdateInterval(5000)
+  checkSupport()
+  if not supported then return end
   noctalia.runAsync(CLI .. " status", function(r) apply(parse(r and r.stdout)) end)
 end
 
@@ -59,5 +75,6 @@ function onIpc(event)
   if OK[event] then noctalia.runAsync(CLI .. " " .. event) end
 end
 
+barWidget.setVisible(false)
 apply(nil)
 update()

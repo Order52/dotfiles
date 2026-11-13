@@ -53,11 +53,11 @@ function update()
   noctalia.setUpdateInterval(1000)
   if not hwmon then findHwmon() end
   local cpu, gpu = readPct()
-  if not cpu then
-    barWidget.setGlyph("propeller") barWidget.setText("N/A") barWidget.setColor("on_surface_variant")
-    barWidget.setTooltip("Fan control unavailable (linuwu_sense not loaded?)")
+  if not cpu then                 -- no linuwu_sense fan control on this machine: hide the button
+    barWidget.setVisible(false)
     return
   end
+  barWidget.setVisible(true)
   local st = readState()
   local r1, r2 = rpm("fan1_input"), rpm("fan2_input")
   local top = math.max(r1 or 0, r2 or 0)

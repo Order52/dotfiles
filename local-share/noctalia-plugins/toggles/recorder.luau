@@ -6,6 +6,20 @@
 local SCRIPT = noctalia.expandPath("~/.config/waybar/modules/toggle-record.sh")
 local PIDF   = "/tmp/wf-recording.pid"
 
+
+-- Only shown when wf-recorder and slurp are installed and the toggle script exists. Re-checked every 30 s, so it appears once installed.
+local NEEDS = [=[command -v wf-recorder && command -v slurp && [ -x "$HOME/.config/waybar/modules/toggle-record.sh" ]]=]
+local supported, checkedAt = false, -1e9
+local function checkSupport()
+  if os.time() - checkedAt < 30 then return end
+  checkedAt = os.time()
+  noctalia.runAsync("sh -c '" .. NEEDS .. "'", function(r)
+    supported = r ~= nil and r.exitCode == 0
+    barWidget.setVisible(supported)
+    if supported then update() end
+  end)
+end
+
 local ticks = 0
 local suppressUntil = 0   -- after a stop-click: show idle at once, even if the pid file lingers a moment
 local lastRec = false
@@ -31,6 +45,8 @@ end
 
 function update()
   noctalia.setUpdateInterval(250)
+  checkSupport()
+  if not supported then return end
   ticks = ticks + 1
   local rec, start = state()
   if ticks < suppressUntil then rec = false end
@@ -62,4 +78,5 @@ function onClick()
   end
   noctalia.runAsync(SCRIPT)
 end
+barWidget.setVisible(false)   -- hidden until the support check passes
 update()

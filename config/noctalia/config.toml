@@ -71,7 +71,7 @@ thickness = 35
     border = ""
     fill = "on_secondary"
     id = "g2"
-    members = [ "profile", "fan", "rgb", "shield", "refresh_rate", "gamemode", "recorder" ]
+    members = [ "profile", "fan", "rgb", "refresh_rate", "gamemode", "recorder" ]
     opacity = 1.0
     padding = 6.0
 
@@ -160,7 +160,9 @@ color = "secondary"
 
 [widget.media]
 hide_when_no_media = true
-title_scroll = "on_hover"
+hide_album_art = true     # YouTube/browser thumbnails get squashed into the tiny pill
+max_length = 160          # px; long video titles end in "…" instead of stretching the bar
+title_scroll = "on_hover"  # hover to scroll the full title
 
 [widget.network]
 color = "secondary"
@@ -266,12 +268,6 @@ type = "sloppy/toggles:rgb"
 
 [widget.rgb.actions]
 middle = "none"
-
-[widget.shield]
-type = "sloppy/toggles:shield"
-
-[widget.shield.actions]
-middle = "none"   # the plugin uses middle click for "off"
 
 [widget.fan]
 type = "sloppy/toggles:fan"
