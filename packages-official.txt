@@ -317,3 +317,7 @@ xsettingsd
 yt-dlp
 zen-browser-bin
 zoxide
+android-tools
+zenity
+libnotify
+sshfs

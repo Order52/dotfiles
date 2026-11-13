@@ -44,7 +44,7 @@ thickness = 35
     border = ""
     fill = "on_secondary"
     id = "g4"
-    members = [ "notifications", "privacy", "battery", "powermon" ]
+    members = [ "notifications", "privacy", "battery", "powermon", "phone" ]
     opacity = 1.0
     padding = 6.0
 
@@ -317,6 +317,10 @@ type = "battery"
 
 [widget.powermon]
 type = "sloppy/powermon:monitor"
+
+# ── Android phone via KDE Connect (plugin: local-share/noctalia-plugins/androidconnect) ──
+[widget.phone]
+type = "sloppy/androidconnect:phone"
 
 # ── Extra click / scroll actions carried over from the Waybar modules ──
 [widget.clock.actions]

@@ -1,0 +1,120 @@
+#!/bin/bash
+# androidconnect: KDE Connect + adb/scrcpy helper behind the Noctalia "sloppy/androidconnect" plugin.
+# Native (Luau) port of the ideas in github.com/demencia89/noctalia-shell-androidconnect-plugin,
+# which is QML-only (Noctalia 4 / Quickshell) and can't load in Noctalia 5.
+#
+#   androidconnect status                 one line per paired device (see below)
+#   androidconnect select <id>            make <id> the device the bar/panel shows
+#   androidconnect ring|ping|send|browse|clip [id]
+#   androidconnect mirror|screenshot|record|awake|wifi [id]
+#   androidconnect refresh                ask kdeconnectd to rediscover devices
+#
+# status line:  id|name|reachable|charge|charging|notifications|nettype|signal|selected|recording|awake
+# [id] defaults to the selected device, else the first reachable one.
+set -u
+BUS=org.kde.kdeconnect
+ROOT=/modules/kdeconnect
+CACHE=${XDG_CACHE_HOME:-$HOME/.cache}/androidconnect
+SHOTS=${ANDROIDCONNECT_DIR:-$HOME/Pictures/Phone}
+mkdir -p "$CACHE"
+
+get()  { busctl --user get-property "$BUS" "$1" "$2" "$3" 2>/dev/null; }
+call() { local o=$1 i=$2 m=$3; shift 3; busctl --user call "$BUS" "$o" "$i" "$m" "$@" 2>/dev/null; }
+val()  { get "$@" | sed -E 's/^[a-z]+ //; s/^"(.*)"$/\1/'; }
+note() { notify-send -a "Android" -i phone "Android" "$*" 2>/dev/null; }
+die()  { note "$*"; echo "$*" >&2; exit 1; }
+
+devices() { call "$ROOT" "$BUS.daemon" devices bb false true | grep -oE '"[^"]+"' | tr -d '"'; }
+dev()     { echo "$ROOT/devices/$1"; }
+reach()   { [ "$(val "$(dev "$1")" "$BUS.device" isReachable)" = true ]; }
+
+pick() {   # $1 = explicit id or empty
+  if [ -n "${1:-}" ]; then echo "$1"; return; fi
+  local sel; sel=$(cat "$CACHE/device" 2>/dev/null)
+  if [ -n "$sel" ] && devices | grep -qx "$sel"; then echo "$sel"; return; fi
+  local d; for d in $(devices); do reach "$d" && { echo "$d"; return; }; done
+  devices | head -1
+}
+
+# adb serial for a KDE Connect device: same IP as KDE Connect sees, else the only adb device attached.
+serial() {
+  local id=$1 ip s list
+  list=$(adb devices 2>/dev/null | awk 'NR>1 && $2=="device"{print $1}')
+  ip=$(get "$(dev "$id")" "$BUS.device" reachableAddresses | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+  if [ -n "$ip" ]; then s=$(grep -m1 "^$ip:" <<<"$list"); [ -n "$s" ] && { echo "$s"; return; }; fi
+  [ "$(grep -c . <<<"$list")" = 1 ] && { echo "$list"; return; }
+  [ -z "$list" ] && die "No phone on adb. Plug in USB (USB debugging on), or use Wireless ADB."
+  die "Several adb devices attached and none matches this phone's IP; unplug the others."
+}
+
+cmd=${1:-status}; shift || true
+case "$cmd" in
+status)
+  sel=$(pick "")
+  for d in $(devices); do
+    p=$(dev "$d")
+    name=$(val "$p" "$BUS.device" name)
+    r=$(val "$p" "$BUS.device" isReachable)
+    ch=-1 cg=false n=0 nt="" sg=-1
+    if [ "$r" = true ]; then
+      ch=$(val "$p/battery" "$BUS.device.battery" charge); ch=${ch:--1}
+      cg=$(val "$p/battery" "$BUS.device.battery" isCharging); cg=${cg:-false}
+      n=$(call "$p/notifications" "$BUS.device.notifications" activeNotifications | awk '{print $2+0}'); n=${n:-0}
+      nt=$(val "$p/connectivity_report" "$BUS.device.connectivity_report" cellularNetworkType)
+      sg=$(val "$p/connectivity_report" "$BUS.device.connectivity_report" cellularNetworkStrength); sg=${sg:--1}
+    fi
+    rec=false; [ -f "$CACHE/record.pid" ] && kill -0 "$(cat "$CACHE/record.pid")" 2>/dev/null && rec=true
+    awk_=false; [ -f "$CACHE/awake" ] && awk_=true
+    echo "$d|${name//|/ }|$r|$ch|$cg|$n|${nt//|/ }|$sg|$([ "$d" = "$sel" ] && echo true || echo false)|$rec|$awk_"
+  done ;;
+select)  [ -n "${1:-}" ] && echo "$1" > "$CACHE/device" ;;
+refresh) call "$ROOT" "$BUS.daemon" forceOnNetworkChange ;;
+ring)    id=$(pick "${1:-}"); call "$(dev "$id")/findmyphone" "$BUS.device.findmyphone" ring || die "Ring failed (phone offline?)" ;;
+ping)    id=$(pick "${1:-}"); kdeconnect-cli -d "$id" --ping-msg "Hello from $(hostname)" >/dev/null 2>&1 || die "Ping failed (phone offline?)" ;;
+clip)    id=$(pick "${1:-}"); txt=$(wl-paste -n 2>/dev/null); [ -n "$txt" ] || die "Clipboard is empty"
+         kdeconnect-cli -d "$id" --share-text "$txt" >/dev/null 2>&1 && note "Clipboard sent" || die "Send failed" ;;
+send)
+  id=$(pick "${1:-}")
+  files=$(zenity --file-selection --multiple --separator=$'\n' --title="Send to phone" 2>/dev/null) || exit 0
+  ok=0; while IFS= read -r f; do [ -n "$f" ] && kdeconnect-cli -d "$id" --share "$f" >/dev/null 2>&1 && ok=$((ok+1)); done <<<"$files"
+  note "Sent $ok file(s) to $(val "$(dev "$id")" "$BUS.device" name)" ;;
+browse)
+  id=$(pick "${1:-}"); p=$(dev "$id")/sftp
+  command -v sshfs >/dev/null || die "Browse files needs sshfs:  sudo pacman -S sshfs"
+  [ "$(call "$p" "$BUS.device.sftp" mountAndWait | awk '{print $2}')" = true ] || die "Mount failed: $(call "$p" "$BUS.device.sftp" getMountError | sed -E 's/^s //')"
+  dir=$(call "$p" "$BUS.device.sftp" getDirectories | grep -oE '"/[^"]+"' | head -1 | tr -d '"')
+  [ -n "$dir" ] || dir=$(call "$p" "$BUS.device.sftp" mountPoint | sed -E 's/^s "(.*)"$/\1/')
+  xdg-open "$dir" >/dev/null 2>&1 & ;;
+mirror)
+  id=$(pick "${1:-}"); s=$(serial "$id"); name=$(val "$(dev "$id")" "$BUS.device" name)
+  pgrep -f "scrcpy .*--serial=$s" >/dev/null && die "Mirror already running"
+  setsid scrcpy --serial="$s" --window-title="${name:-Phone}" --stay-awake --turn-screen-off --max-size=1600 \
+    --video-bit-rate=8M ${ANDROIDCONNECT_SCRCPY_ARGS:-} >"$CACHE/scrcpy.log" 2>&1 &
+  ;;
+screenshot)
+  id=$(pick "${1:-}"); s=$(serial "$id"); mkdir -p "$SHOTS"
+  f="$SHOTS/screenshot-$(date +%Y%m%d-%H%M%S).png"
+  adb -s "$s" exec-out screencap -p > "$f" && [ -s "$f" ] && { wl-copy < "$f" 2>/dev/null; note "Screenshot saved (and copied): $f"; } || { rm -f "$f"; die "Screenshot failed"; } ;;
+record)
+  if [ -f "$CACHE/record.pid" ] && kill -0 "$(cat "$CACHE/record.pid")" 2>/dev/null; then
+    kill -INT "$(cat "$CACHE/record.pid")"; rm -f "$CACHE/record.pid"; note "Recording saved to $(cat "$CACHE/record.file" 2>/dev/null)"; exit 0
+  fi
+  id=$(pick "${1:-}"); s=$(serial "$id"); mkdir -p "$SHOTS"
+  f="$SHOTS/recording-$(date +%Y%m%d-%H%M%S).mp4"; echo "$f" > "$CACHE/record.file"
+  setsid scrcpy --serial="$s" --no-window --no-playback --record="$f" >"$CACHE/record.log" 2>&1 &
+  echo $! > "$CACHE/record.pid"; note "Recording phone screen… (click again to stop)" ;;
+awake)
+  id=$(pick "${1:-}"); s=$(serial "$id")
+  if [ -f "$CACHE/awake" ]; then adb -s "$s" shell svc power stayon false; rm -f "$CACHE/awake"; note "Keep awake: off"
+  else adb -s "$s" shell svc power stayon true && touch "$CACHE/awake" && note "Keep awake: on (while charging/plugged)"; fi ;;
+wifi)   # switch a USB-connected phone to wireless adb on its KDE Connect IP
+  id=$(pick "${1:-}")
+  ip=$(get "$(dev "$id")" "$BUS.device" reachableAddresses | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+  [ -n "$ip" ] || die "Phone's IP unknown (is it reachable over Wi-Fi in KDE Connect?)"
+  if ! adb connect "$ip:5555" 2>/dev/null | grep -q connected; then
+    adb tcpip 5555 >/dev/null 2>&1 || die "Plug the phone in over USB once to enable wireless adb"
+    sleep 2; adb connect "$ip:5555" | grep -q connected || die "adb connect $ip:5555 failed"
+  fi
+  note "Wireless adb connected: $ip:5555" ;;
+*) sed -n '2,13p' "$0"; exit 1 ;;
+esac

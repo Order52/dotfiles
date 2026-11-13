@@ -56,6 +56,10 @@ say "Installing dotfiles"
 run mkdir -p "$HOME/.scripts/Acer/PredatorSense" "$HOME/.config" "$HOME/.local/bin" "$HOME/.local/share/noctalia/plugins" "$HOME/.scripts" "$HOME/.config/systemd/user"
 run rsync -a config/ "$HOME/.config/"
 run rsync -a local-share/noctalia-plugins/ "$HOME/.local/share/noctalia/plugins/"
+# plugins must also be enabled in Noctalia's state (works once noctalia is running; otherwise enable them in Settings → Plugins)
+if command -v noctalia >/dev/null; then
+  for p in sloppy/toggles sloppy/powermon sloppy/androidconnect; do run noctalia msg plugins enable "$p" >/dev/null 2>&1 || true; done
+fi
 run rsync -a local-bin/ "$HOME/.local/bin/"
 run chmod +x "$HOME"/.local/bin/*.py "$HOME"/.local/bin/*.sh 2>/dev/null || true
 run rsync -a scripts/ "$HOME/.scripts/"

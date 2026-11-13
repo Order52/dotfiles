@@ -23,6 +23,8 @@ Existing configs are backed up to `~/dotfiles-backup-<date>` first. It is safe t
   wallpaper (random, incl. subfolders), Alt+Tab window switcher, OSDs. No waybar/swaync/rofi running in the background.
 * **Custom Noctalia plugins** (`local-share/noctalia-plugins/toggles`): a **Predator profile** button, a **fan** button with a
   popup (smart curve / slider / presets), refresh-rate, game-mode and recorder buttons; plus a power monitor.
+* **Android phone** (`local-share/noctalia-plugins/androidconnect` + `local-bin/androidconnect`): battery / notifications in the bar,
+  a panel to ring, send files, browse, push the clipboard, and mirror / screenshot / record via scrcpy — see [docs/androidconnect.md](docs/androidconnect.md).
 * Terminals (alacritty, kitty, foot, ghostty), fish/zsh/bash, GTK/Qt/Kvantum themes, fastfetch, btop, cava, nvim, micro, mpv, KDE settings.
 
 **Hardware: Acer Predator**

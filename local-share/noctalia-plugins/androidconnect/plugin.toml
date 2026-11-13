@@ -1,0 +1,18 @@
+id          = "sloppy/androidconnect"
+name        = "Android Connect"
+version     = "1.0.0"
+plugin_api  = 3
+author      = "sloppy"
+description = "Phone status from KDE Connect (battery, signal, notifications) plus ring / send / browse / clipboard and scrcpy mirror, screenshot, recording. Native port of demencia89/noctalia-shell-androidconnect-plugin (QML, Noctalia 4 only)."
+
+[[widget]]
+id    = "phone"
+entry = "widget.luau"
+
+[[panel]]
+id     = "panel"
+entry  = "panel.luau"
+width  = 380
+height = 420
+placement       = "floating"
+open_near_click = true
