@@ -74,6 +74,33 @@ Existing configs are backed up to `~/dotfiles-backup-<date>` first. It is safe t
 * Configs assume user `sloppy`; the installer rewrites `/home/sloppy` and the service user for any other account.
 * Not included on purpose: browser profiles, keyrings, game files, wallpapers/photos, any tokens.
 
+### Things this repo uses but does not ship
+
+* **TrueSense** (the Acer Predator control tool): the fan, power-mode and RGB buttons in the Noctalia toggles plugin
+  (`local-share/noctalia-plugins/toggles`) call the `truesense` CLI (0.5.0, installed in `/usr/local/bin`), its daemon
+  (socket `/run/truesense/truesense.sock`, state in `/tmp/truesense-state`) and the `truesense-fast` helper in `~/.local/bin`.
+  None of these are in this repo. Without TrueSense the fan and profile buttons show `N/A` and the RGB button does nothing.
+  The other toggles (refresh rate, game mode, recorder) work without it. Each button can also be hidden from the
+  plugin's settings page in Noctalia.
+* **dualsense-haptics** (<https://github.com/sendement/dualsense-haptics>): `local-bin/dualsense-haptics-game` runs its audio-to-haptics
+  engine from a clone at `~/dualsense-haptics` when a game profile says `"mode": "engine"` (the default). With `"mode": "moments"`
+  (used for CONTROL Resonant) it runs `dualsense-haptics-moments` instead, which only needs `python-numpy`, `python-evdev` and
+  `parec` (PipeWire/Pulse).
+* `dualsense-xbox-bridge` needs `python-evdev`, `dualsensectl` (AUR: `dualsensectl-git`) and write access to `/dev/uinput`
+  (your user in the `input` group is enough on this setup).
+
+### DualSense game setup (CONTROL Resonant, Bloodborne)
+
+* `local-bin/dualsense-xbox-bridge` shows the real DualSense to a Wine/Proton game as one virtual Xbox 360 pad (square/triangle
+  swapped to match Xbox labels), forwards the game's rumble to the DualSense motors and applies the adaptive triggers on every
+  (re)connect. `local-bin/dualsense-haptics-*` add haptics; both run as user services (`config/systemd/user/dualsense-*.service`).
+* Per-game settings live in `config/dualsense-game/profiles/<name>.json`; `~/.config/dualsense-game/active` names the active one
+  (the game's pre-launch script in `scripts/other/` sets it). Add a profile and a pair of launch/exit scripts for a new game.
+* The CONTROL Resonant launch script currently runs the game with the native DualSense and stops these layers. That prefix only
+  detects the pad under **GE-Proton10-34** (with `DisableHidraw=1`); newer Proton-GE (11-12) does not, so keep that runner
+  pinned for this game. If you need the Xbox bridge again, start `dualsense-xbox-bridge` and `dualsense-haptics-game` from the
+  pre-launch script (see git history for the version that did).
+
 ## Credits and licenses
 
 * `drivers/linuwu_sense` — Linuwu-Sense kernel driver (GPL-2.0-or-later, derived from the Linux `acer-wmi` driver):
