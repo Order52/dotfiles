@@ -1,0 +1,331 @@
+#!/usr/bin/env python3
+"""Present the real DualSense to Wine/Proton games as a virtual Microsoft Xbox 360 pad (045e:028e).
+
+Reads the DualSense's own evdev node (hid-playstation), grabs it and its touchpad / motion nodes so
+the game and the desktop see only the Xbox pad, and re-emits sticks, triggers, d-pad and buttons.
+The Xbox pad is created once and kept, so a controller reconnect does not look like a hotplug to
+the game. The game's XInput rumble is played on the DualSense motors, and on every (re)connect the
+active game profile's adaptive triggers and rumble strength are applied through dualsensectl.
+
+Per-game settings: ~/.config/dualsense-game/profiles/<name>.json, <name> = ~/.config/dualsense-game/active
+Stability rules: nothing in the input path blocks (dualsensectl runs in a thread), and no error in
+rumble / profile handling is allowed to stop the bridge or drop the virtual pad while a game runs.
+"""
+import json
+import os
+import select
+import subprocess
+import sys
+import threading
+import time
+
+import evdev
+from evdev import AbsInfo, InputDevice, UInput, ecodes as e, ff
+
+SRC_NAME = "Sony Interactive Entertainment DualSense Wireless Controller"
+EXTRA_GRAB = [SRC_NAME + " Touchpad", SRC_NAME + " Motion Sensors"]
+DST_NAME = "Microsoft X-Box 360 pad"
+CONF_DIR = os.path.expanduser("~/.config/dualsense-game")
+
+# Same layout as the Linux xpad driver.
+BUTTONS = [e.BTN_SOUTH, e.BTN_EAST, e.BTN_NORTH, e.BTN_WEST, e.BTN_TL, e.BTN_TR,
+           e.BTN_SELECT, e.BTN_START, e.BTN_MODE, e.BTN_THUMBL, e.BTN_THUMBR]
+AXES = [
+    (e.ABS_X,  AbsInfo(0, -32768, 32767, 16, 128, 0)),
+    (e.ABS_Y,  AbsInfo(0, -32768, 32767, 16, 128, 0)),
+    (e.ABS_Z,  AbsInfo(0, 0, 255, 0, 0, 0)),
+    (e.ABS_RX, AbsInfo(0, -32768, 32767, 16, 128, 0)),
+    (e.ABS_RY, AbsInfo(0, -32768, 32767, 16, 128, 0)),
+    (e.ABS_RZ, AbsInfo(0, 0, 255, 0, 0, 0)),
+    (e.ABS_HAT0X, AbsInfo(0, -1, 1, 0, 0, 0)),
+    (e.ABS_HAT0Y, AbsInfo(0, -1, 1, 0, 0, 0)),
+]
+AXIS_CODES = {c for c, _ in AXES}
+
+# hid-playstation labels the face buttons the new way (Triangle = BTN_NORTH, Square = BTN_WEST);
+# xpad / Xbox 360 pads use the old labels (X = left = BTN_NORTH, Y = top = BTN_WEST). Without this swap
+# Triangle arrives as Xbox X and Square as Xbox Y. Cross/Circle (A/B) already match.
+FACE_SWAP = {e.BTN_NORTH: e.BTN_WEST, e.BTN_WEST: e.BTN_NORTH}
+
+
+def log(msg):
+    print(f"[dualsense-xbox-bridge] {msg}", flush=True)
+
+
+# --------------------------------------------------------------------------- profile
+class Profile:
+    def __init__(self):
+        self.name = "default"
+        self.triggers = {}
+        self.attenuation = [0, 0]
+        self.deadzone = {e.ABS_X: 0.10, e.ABS_Y: 0.10, e.ABS_RX: 0.03, e.ABS_RY: 0.03}
+        self.rumble_scale = 1.0
+
+    @classmethod
+    def load(cls):
+        p = cls()
+        try:
+            with open(os.path.join(CONF_DIR, "active")) as f:
+                p.name = f.read().strip() or "default"
+            with open(os.path.join(CONF_DIR, "profiles", p.name + ".json")) as f:
+                d = json.load(f)
+            p.triggers = {k: [str(x) for x in v] for k, v in d.get("triggers", {}).items()}
+            p.attenuation = [int(x) for x in d.get("attenuation", p.attenuation)][:2]
+            st = d.get("sticks", {})
+            ld, rd = float(st.get("left_deadzone", 0.10)), float(st.get("right_deadzone", 0.03))
+            p.deadzone = {e.ABS_X: ld, e.ABS_Y: ld, e.ABS_RX: rd, e.ABS_RY: rd}
+            p.rumble_scale = max(0.0, min(2.0, float(d.get("rumble_scale", 1.0))))
+            log(f"profile '{p.name}' loaded")
+        except (OSError, ValueError, TypeError) as ex:
+            log(f"profile load failed ({ex}); using defaults")
+        return p
+
+    def commands(self):
+        cmds = []
+        for side in ("left", "right"):
+            if side in self.triggers:
+                cmds.append(["trigger", side, *self.triggers[side]])
+        cmds.append(["attenuation", *[str(x) for x in self.attenuation]])
+        return cmds
+
+
+def apply_profile_async(profile):
+    """dualsensectl calls can take seconds; never run them on the input path."""
+    def work():
+        time.sleep(0.5)   # let hid-playstation finish setting the device up
+        for args in profile.commands():
+            try:
+                subprocess.run(["dualsensectl", *args], timeout=5, capture_output=True)
+            except (OSError, subprocess.SubprocessError):
+                log(f"dualsensectl {' '.join(args)} failed")
+    threading.Thread(target=work, daemon=True).start()
+
+
+def scale(profile, code, raw):
+    """DualSense 0..255 -> Xbox pad range, with the profile's dead zone on the sticks."""
+    dz = profile.deadzone.get(code)
+    if dz is None:
+        return raw   # triggers 0..255 and hat -1..1 are already in range
+    n = (raw - 127.5) / 127.5
+    if abs(n) < dz:
+        return 0
+    n = (abs(n) - dz) / (1 - dz) * (1 if n > 0 else -1)
+    return int(max(-1.0, min(1.0, n)) * 32767)
+
+
+# --------------------------------------------------------------------------- devices
+def find_device(name, need_ff=False):
+    for path in evdev.list_devices():
+        try:
+            dev = InputDevice(path)
+        except OSError:
+            continue
+        if dev.name == name and (not need_ff or e.EV_FF in dev.capabilities()):
+            return dev
+        dev.close()
+    return None
+
+
+def grab_all(names):
+    grabbed = []
+    for name in names:
+        d = find_device(name)
+        if d is None:
+            continue
+        try:
+            d.grab()
+            grabbed.append(d)
+        except OSError:
+            d.close()
+    return grabbed
+
+
+# --------------------------------------------------------------------------- rumble
+class Rumble:
+    """Plays the game's rumble effects on the real DualSense (one physical effect, max of all active)."""
+
+    def __init__(self, profile):
+        self.profile = profile
+        self.effects = {}   # game effect id -> (strong, weak, length_ms)
+        self.active = {}    # game effect id -> expiry time (None = until stopped)
+        self.real = None
+        self.real_id = -1
+        self.last = (0, 0)
+        self.gain = 0xFFFF
+
+    def _open(self):
+        if self.real is None:
+            self.real = find_device(SRC_NAME, need_ff=True)
+            self.real_id = -1
+            self.last = (0, 0)
+        return self.real is not None
+
+    def upload(self, eid, strong, weak, length):
+        self.effects[eid] = (strong, weak, length)
+
+    def erase(self, eid):
+        self.effects.pop(eid, None)
+        self.active.pop(eid, None)
+        self.apply()
+
+    def play(self, eid, count):
+        if count and eid in self.effects:
+            length = self.effects[eid][2]
+            self.active[eid] = time.monotonic() + length / 1000 if length else None
+        else:
+            self.active.pop(eid, None)
+        self.apply()
+
+    def tick(self):
+        now = time.monotonic()
+        expired = [i for i, t in self.active.items() if t is not None and t <= now]
+        for i in expired:
+            del self.active[i]
+        if expired:
+            self.apply()
+
+    def pending(self):
+        return any(t is not None for t in self.active.values())
+
+    def apply(self):
+        strong = weak = 0
+        for eid in self.active:
+            s, w, _ = self.effects.get(eid, (0, 0, 0))
+            strong, weak = max(strong, s), max(weak, w)
+        k = self.gain / 0xFFFF * self.profile.rumble_scale
+        strong, weak = min(0xFFFF, int(strong * k)), min(0xFFFF, int(weak * k))
+        if (strong, weak) == self.last:
+            return
+        self.last = (strong, weak)
+        if not self._open():
+            return
+        try:
+            if strong == 0 and weak == 0:
+                if self.real_id >= 0:
+                    self.real.write(e.EV_FF, self.real_id, 0)
+                return
+            eff = ff.Effect(
+                e.FF_RUMBLE, self.real_id, 0, ff.Trigger(0, 0), ff.Replay(0, 0),
+                ff.EffectType(ff_rumble_effect=ff.Rumble(strong_magnitude=strong, weak_magnitude=weak)),
+            )
+            self.real_id = self.real.upload_effect(eff)
+            self.real.write(e.EV_FF, self.real_id, 1)
+        except OSError:
+            log("real DualSense gone, rumble paused")
+            try:
+                self.real.close()
+            except OSError:
+                pass
+            self.real = None
+
+    def stop_all(self):
+        self.active.clear()
+        try:
+            if self.real is not None and self.real_id >= 0:
+                self.real.write(e.EV_FF, self.real_id, 0)
+        except OSError:
+            pass
+
+
+def handle_uinput(ui, rumble):
+    for ev in ui.read():
+        if ev.type == e.EV_UINPUT and ev.code == e.UI_FF_UPLOAD:
+            up = ui.begin_upload(ev.value)
+            try:
+                eff = up.effect
+                if eff.type == e.FF_RUMBLE:
+                    r = eff.u.ff_rumble_effect
+                    rumble.upload(up.effect_id, r.strong_magnitude, r.weak_magnitude, eff.ff_replay.length)
+                up.retval = 0
+            finally:
+                ui.end_upload(up)
+        elif ev.type == e.EV_UINPUT and ev.code == e.UI_FF_ERASE:
+            er = ui.begin_erase(ev.value)
+            try:
+                rumble.erase(er.effect_id)
+                er.retval = 0
+            finally:
+                ui.end_erase(er)
+        elif ev.type == e.EV_FF:
+            if ev.code == e.FF_GAIN:
+                rumble.gain = max(0, min(0xFFFF, ev.value))
+            else:
+                rumble.play(ev.code, ev.value)
+
+
+def safe_uinput(ui, rumble):
+    try:
+        handle_uinput(ui, rumble)
+    except Exception as ex:   # never let rumble handling take the pad away mid-game
+        log(f"rumble handling error ignored: {ex!r}")
+
+
+# --------------------------------------------------------------------------- main
+def main():
+    ui = UInput(
+        {e.EV_KEY: BUTTONS, e.EV_ABS: AXES, e.EV_FF: [e.FF_RUMBLE, e.FF_GAIN]},
+        name=DST_NAME, vendor=0x045E, product=0x028E, version=0x0114, bustype=e.BUS_USB,
+    )
+    profile = Profile.load()
+    rumble = Rumble(profile)
+    log(f"created {DST_NAME} (045e:028e) at {ui.device.path}")
+    try:
+        while True:
+            src = find_device(SRC_NAME)
+            if src is None:
+                r, _, _ = select.select([ui.fd], [], [], 1.0)
+                if r:
+                    safe_uinput(ui, rumble)
+                rumble.tick()
+                continue
+            log(f"bridging {src.path}")
+            profile = Profile.load()
+            rumble.profile = profile
+            extras = grab_all(EXTRA_GRAB)
+            try:
+                src.grab()
+            except OSError:
+                log("could not grab the DualSense (something else holds it); the game may see two pads")
+            # initial state, so sticks start centred instead of at the Xbox range's minimum
+            for code, _ in AXES:
+                try:
+                    ui.write(e.EV_ABS, code, scale(profile, code, src.absinfo(code).value))
+                except (OSError, KeyError):
+                    pass
+            ui.syn()
+            apply_profile_async(profile)
+            try:
+                while True:
+                    r, _, _ = select.select([src.fd, ui.fd], [], [], 0.02 if rumble.pending() else None)
+                    if ui.fd in r:
+                        safe_uinput(ui, rumble)
+                    if src.fd in r:
+                        for ev in src.read():
+                            if ev.type == e.EV_KEY and ev.code in BUTTONS:
+                                ui.write(e.EV_KEY, FACE_SWAP.get(ev.code, ev.code), ev.value)
+                            elif ev.type == e.EV_ABS and ev.code in AXIS_CODES:
+                                ui.write(e.EV_ABS, ev.code, scale(profile, ev.code, ev.value))
+                            elif ev.type == e.EV_SYN:
+                                ui.syn()
+                    rumble.tick()
+            except OSError:
+                log("DualSense gone, waiting for it to come back (the Xbox pad stays)")
+                rumble.stop_all()
+                for d in extras:
+                    try:
+                        d.ungrab()
+                    except OSError:
+                        pass
+                    d.close()
+                src.close()
+                time.sleep(1)
+    finally:
+        rumble.stop_all()
+        ui.close()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit(0)

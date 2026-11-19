@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+"""Moment-based DualSense haptics: vibrate only on sudden events in the game's audio, never continuously.
+
+Why: audio-to-haptics (DSX style, also the dualsense-haptics engine) follows the *level* of the sound, so
+music and ambience make the controller buzz all the time. On a PS5 the game authors haptics for events
+(hits, shots, explosions, abilities). This listens to the game's audio, finds onsets - a band suddenly
+jumping well above its own recent background - and plays a short decaying pulse on the matching motor:
+  low band  (<150 Hz: impacts, explosions, heavy landings)  -> strong (left) motor
+  high band (400+ Hz: gunfire, glass, hits, abilities)      -> weak (right) motor
+Steady sound, however loud, stays silent. The game's own XInput rumble is handled separately by the bridge.
+
+Settings: "haptics.moments" in the active game profile (~/.config/dualsense-game/profiles/<active>.json),
+hot-reloaded. Started by dualsense-haptics-game when the profile says "mode": "moments".
+"""
+import json
+import math
+import os
+import signal
+import subprocess
+import sys
+import time
+
+import numpy as np
+import evdev
+from evdev import InputDevice, ecodes as e, ff
+
+CONF_DIR = os.path.expanduser("~/.config/dualsense-game")
+REAL_NAME = "Sony Interactive Entertainment DualSense Wireless Controller"
+FS = 8000
+CH = 40                 # 5 ms analysis chunks
+DT = CH / FS
+TAPS = 96
+
+DEFAULTS = {
+    "low":  {"ratio": 3.0, "floor": 0.12, "strength": 1.0},
+    "high": {"ratio": 2.5, "floor": 0.08, "strength": 0.8},
+    "refractory_s": 0.15,
+    "decay_s": 0.07,
+    "min_pulse": 0.35,
+    "master": 1.0,
+}
+
+
+def log(msg):
+    print(f"[haptics-moments] {msg}", flush=True)
+
+
+def lowpass_kernel(fc):
+    tau = FS / (2 * math.pi * fc)
+    k = np.exp(-np.arange(TAPS) / tau)
+    return (k / k.sum()).astype(np.float32)   # newest sample (index 0 of the window) weighs most
+
+
+K_LOW = lowpass_kernel(150)
+K_HP = lowpass_kernel(400)
+
+
+def load_cfg():
+    cfg = json.loads(json.dumps(DEFAULTS))
+    try:
+        with open(os.path.join(CONF_DIR, "active")) as f:
+            name = f.read().strip()
+        path = os.path.join(CONF_DIR, "profiles", name + ".json")
+        with open(path) as f:
+            user = json.load(f).get("haptics", {}).get("moments", {})
+        for k, v in user.items():
+            if isinstance(v, dict) and isinstance(cfg.get(k), dict):
+                cfg[k].update(v)
+            else:
+                cfg[k] = v
+        return cfg, os.path.getmtime(path)
+    except (OSError, ValueError):
+        return cfg, None
+
+
+def find_real():
+    for p in evdev.list_devices():
+        try:
+            d = InputDevice(p)
+        except OSError:
+            continue
+        if d.name == REAL_NAME and e.EV_FF in d.capabilities():
+            return d
+        d.close()
+    return None
+
+
+def pick_sink():
+    """The sink the game is playing on: a RUNNING sink that is not the DualSense's own haptic output."""
+    try:
+        out = subprocess.run(["pactl", "list", "sinks", "short"], capture_output=True, text=True, timeout=2).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    running = [f.split("\t") for f in out.splitlines()]
+    running = [f[1] for f in running if len(f) >= 5 and f[4] == "RUNNING" and "Sony_Interactive" not in f[1]]
+    return running[0] if running else None
+
+
+class Motors:
+    def __init__(self):
+        self.dev = None
+        self.eid = -1
+        self.last = (0, 0)
+
+    def set(self, strong, weak):
+        s, w = int(min(1.0, strong) * 65535), int(min(1.0, weak) * 65535)
+        if (s, w) == self.last:
+            return
+        self.last = (s, w)
+        try:
+            if self.dev is None:
+                self.dev = find_real()
+                self.eid = -1
+                if self.dev is None:
+                    return
+            if s == 0 and w == 0:
+                if self.eid >= 0:
+                    self.dev.write(e.EV_FF, self.eid, 0)
+                return
+            eff = ff.Effect(e.FF_RUMBLE, self.eid, 0, ff.Trigger(0, 0), ff.Replay(0, 0),
+                            ff.EffectType(ff_rumble_effect=ff.Rumble(strong_magnitude=s, weak_magnitude=w)))
+            self.eid = self.dev.upload_effect(eff)
+            self.dev.write(e.EV_FF, self.eid, 1)
+        except OSError:
+            self.dev = None
+
+    def stop(self):
+        self.set(0, 0)
+
+
+class Band:
+    def __init__(self):
+        self.es = 0.05          # slow background level
+        self.pulse = 0.0
+        self.last_t = -9.0
+
+    def step(self, v, t, p, cfg):
+        fired = False
+        thr = max(p["floor"], p["ratio"] * self.es)
+        if v > thr and t - self.last_t > cfg["refractory_s"]:
+            over = (v / max(self.es, 1e-3) - p["ratio"]) / p["ratio"]
+            level = min(1.0, v / 0.35)
+            m = cfg["min_pulse"] + (1 - cfg["min_pulse"]) * min(1.0, max(0.0, over)) * level
+            self.pulse = max(self.pulse * 0.5, min(1.0, m)) * p["strength"] * cfg["master"]
+            self.last_t = t
+            fired = True
+        else:
+            self.pulse *= math.exp(-DT / cfg["decay_s"])
+            if self.pulse < 0.03:
+                self.pulse = 0.0
+        # background follows slowly, and never chases a spike (so a hit can't raise its own threshold)
+        a = DT / 0.6
+        self.es += (min(v, self.es * 1.5 + 0.002) - self.es) * a if v > self.es else (v - self.es) * a
+        return fired
+
+
+def main():
+    stop = {"v": False}
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        signal.signal(sig, lambda *_: stop.update(v=True))
+    cfg, mtime = load_cfg()
+    motors = Motors()
+    low, high = Band(), Band()
+    hist = np.zeros(TAPS - 1, dtype=np.float32)
+    proc, sink, last_sink_check, last_cfg_check = None, None, 0.0, 0.0
+    t0 = time.monotonic()
+    events = 0
+    log(f"started (low x{cfg['low']['ratio']} floor {cfg['low']['floor']}, high x{cfg['high']['ratio']} floor {cfg['high']['floor']})")
+    try:
+        while not stop["v"]:
+            now = time.monotonic()
+            if now - last_cfg_check > 2:
+                last_cfg_check = now
+                c, m = load_cfg()
+                if m != mtime:
+                    cfg, mtime = c, m
+                    log("profile reloaded")
+            if proc is None or now - last_sink_check > 2:
+                last_sink_check = now
+                want = pick_sink()
+                if want and want != sink:
+                    if proc is not None:
+                        proc.kill()
+                    sink = want
+                    proc = subprocess.Popen(
+                        ["parec", "-d", sink + ".monitor", "--format=s16le", f"--rate={FS}", "--channels=1",
+                         "--latency-msec=10"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=0)
+                    hist[:] = 0
+                    log(f"listening to {sink}")
+                elif not want and proc is not None and sink is not None:
+                    pass   # sink went idle: keep the stream, silence yields no events
+            if proc is None:
+                motors.stop()
+                time.sleep(0.5)
+                continue
+            raw = proc.stdout.read(CH * 2)
+            if not raw or len(raw) < CH * 2:
+                proc = None
+                sink = None
+                continue
+            x = np.frombuffer(raw, dtype="<i2").astype(np.float32) / 32768
+            buf = np.concatenate([hist, x])
+            hist = buf[-(TAPS - 1):]
+            lo_full = np.convolve(buf, K_LOW, mode="valid")          # len CH
+            hp = x - np.convolve(buf, K_HP, mode="valid")
+            t = time.monotonic() - t0
+            r_low = float(np.sqrt(np.mean(lo_full ** 2)))
+            r_high = float(np.sqrt(np.mean(hp ** 2)))
+            if cfg.get("enabled", True):
+                events += low.step(r_low, t, cfg["low"], cfg) + high.step(r_high, t, cfg["high"], cfg)
+                motors.set(low.pulse, high.pulse)
+            else:
+                motors.stop()
+    finally:
+        motors.stop()
+        if proc is not None:
+            proc.kill()
+        log(f"stopped ({events} moments)")
+
+
+if __name__ == "__main__":
+    main()

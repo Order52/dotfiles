@@ -1,0 +1,73 @@
+{
+  "name": "CONTROL Resonant",
+  "_notes": "Per-game DualSense profile used by dualsense-xbox-bridge and dualsense-haptics-game. Edit and restart the two services (or relaunch the game). Active profile = ~/.config/dualsense-game/active.",
+  "triggers": {
+    "left": [
+      "feedback",
+      "3",
+      "3"
+    ],
+    "right": [
+      "weapon",
+      "4",
+      "6",
+      "7"
+    ]
+  },
+  "attenuation": [
+    0,
+    0
+  ],
+  "sticks": {
+    "left_deadzone": 0.1,
+    "right_deadzone": 0.03
+  },
+  "rumble_scale": 0.85,
+  "haptics": {
+    "preset": "cinema",
+    "master_gain": 1.1,
+    "direct_gain": 4.0,
+    "override": {
+      "bass": {
+        "attack": 0.97,
+        "release": 0.35,
+        "lo": 0.03,
+        "hi": 0.2,
+        "gamma": 1.8
+      },
+      "treble": {
+        "attack": 0.95,
+        "release": 0.35,
+        "lo": 0.012,
+        "hi": 0.08,
+        "gamma": 1.2
+      },
+      "bass_ceiling": {
+        "attack_s": 0.1,
+        "release_s": 3.0
+      },
+      "treble_ceiling": {
+        "attack_s": 0.08,
+        "release_s": 2.5
+      }
+    },
+    "mode": "moments",
+    "moments": {
+      "_notes": "Vibrate only on sudden events. ratio = how far above its own background a band must jump (higher = fewer moments); floor = minimum level; strength 0-1; decay_s = pulse length.",
+      "low": {
+        "ratio": 3.0,
+        "floor": 0.12,
+        "strength": 1.0
+      },
+      "high": {
+        "ratio": 2.5,
+        "floor": 0.08,
+        "strength": 0.8
+      },
+      "refractory_s": 0.18,
+      "decay_s": 0.055,
+      "min_pulse": 0.35,
+      "master": 1.0
+    }
+  }
+}

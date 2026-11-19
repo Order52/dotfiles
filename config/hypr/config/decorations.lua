@@ -6,8 +6,8 @@ hl.config({
     decoration = {
         -- cachyos-new-rice look
         rounding         = 20,
-        active_opacity   = 0.95,
-        inactive_opacity = 0.85,
+        active_opacity   = 1.0,
+        inactive_opacity = 1.0,
         fullscreen_opacity = 1.0,
 
         -- ── Blur Settings ──────────────────────────────────────

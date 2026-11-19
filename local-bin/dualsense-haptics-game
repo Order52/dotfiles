@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+"""Run sendement/dualsense-haptics' audio-to-haptics engine headless (no GUI/PySide6) for games.
+
+Game audio is played straight onto the DualSense's haptic motors over USB (the same path the PS5
+uses), or as a band-split rumble envelope over Bluetooth. Adaptive triggers and lights are left to
+ds4u. Settings: ~/.config/dualsense-haptics-game/config.json (preset + overrides), re-read live.
+
+  dualsense-haptics-game            run until SIGTERM / Ctrl+C
+
+Settings come from the "haptics" section of the active game profile
+(~/.config/dualsense-game/profiles/<active>.json): preset, master_gain, direct_gain and an
+"override" tree merged over the preset (band thresholds, attack/release, ceilings ...).
+"""
+import copy
+import json
+import os
+import signal
+import sys
+import threading
+
+REPO = os.path.expanduser("~/dualsense-haptics")
+sys.path.insert(0, REPO)
+
+from haptics_engine import DEFAULT_CONFIG, HapticsEngine  # noqa: E402
+from presets import preset_params  # noqa: E402
+
+CONF_DIR = os.path.expanduser("~/.config/dualsense-game")
+DEFAULTS = {"preset": "cinema", "master_gain": None, "direct_gain": None}
+
+
+def deep_merge(base, over):
+    for k, v in over.items():
+        if isinstance(v, dict) and isinstance(base.get(k), dict):
+            deep_merge(base[k], v)
+        else:
+            base[k] = v
+    return base
+
+
+def profile_path():
+    try:
+        with open(os.path.join(CONF_DIR, "active")) as f:
+            name = f.read().strip() or "default"
+    except OSError:
+        name = "default"
+    return os.path.join(CONF_DIR, "profiles", name + ".json")
+
+
+def load():
+    try:
+        with open(profile_path()) as f:
+            user = json.load(f).get("haptics", {})
+    except (OSError, ValueError):
+        user = {}
+    opts = {**DEFAULTS, **user}
+    conf = deep_merge(copy.deepcopy(DEFAULT_CONFIG), preset_params(opts["preset"]))
+    if opts["master_gain"] is not None:
+        conf["master_gain"] = float(opts["master_gain"])
+    if opts["direct_gain"] is not None:
+        conf["direct_audio"]["gain"] = float(opts["direct_gain"])
+    conf["direct_audio"]["enabled"] = True
+    conf["led"]["enabled"] = False            # lights are left alone
+    conf["bt_hid_proxy"]["enabled"] = False   # no HID proxy: nothing may fight the bridge for the pad
+    if isinstance(user.get("override"), dict):
+        deep_merge(conf, user["override"])
+    return conf
+
+
+def main():
+    try:
+        with open(profile_path()) as f:
+            mode = json.load(f).get("haptics", {}).get("mode", "engine")
+    except (OSError, ValueError):
+        mode = "engine"
+    if mode == "moments":   # event-only haptics, no continuous audio-following
+        os.execv(os.path.expanduser("~/.local/bin/dualsense-haptics-moments"),
+                 [os.path.expanduser("~/.local/bin/dualsense-haptics-moments")])
+    conf = load()
+    engine = HapticsEngine(conf, {"source": "auto"})   # follow whichever output is playing
+    engine.start()
+    stop = threading.Event()
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        signal.signal(sig, lambda *_: stop.set())
+    last_status, mtime = None, None
+    while not stop.is_set():
+        try:
+            m = os.path.getmtime(profile_path())
+            if m != mtime:
+                if mtime is not None:
+                    fresh = load()
+                    conf.update(fresh)   # same dict object the engine reads
+                    print("config reloaded", flush=True)
+                mtime = m
+        except OSError:
+            pass
+        try:
+            while True:
+                s = engine.status_queue.get_nowait()
+                if s != last_status:
+                    last_status = s
+                    print(f"status: {s}", flush=True)
+        except Exception:
+            pass
+        stop.wait(0.5)
+    engine.stop()
+    engine.join(timeout=2)
+
+
+if __name__ == "__main__":
+    main()

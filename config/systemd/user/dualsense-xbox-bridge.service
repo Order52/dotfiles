@@ -1,0 +1,7 @@
+[Unit]
+Description=Present the DualSense to games as an Xbox 360 controller (+ triggers, rumble)
+
+[Service]
+ExecStart=%h/.local/bin/dualsense-xbox-bridge
+Restart=always
+RestartSec=1

@@ -1,0 +1,7 @@
+[Unit]
+Description=DualSense audio-to-haptics for games (sendement/dualsense-haptics engine, headless)
+
+[Service]
+ExecStart=%h/.local/bin/dualsense-haptics-game
+Restart=always
+RestartSec=2

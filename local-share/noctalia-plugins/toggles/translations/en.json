@@ -1,0 +1,8 @@
+{
+  "settings.show_profile.label": "Show Power mode button",
+  "settings.show_fan.label": "Show Fan button",
+  "settings.show_rgb.label": "Show RGB lighting button",
+  "settings.show_refresh.label": "Show Refresh rate button",
+  "settings.show_gamemode.label": "Show Gamemode button",
+  "settings.show_recorder.label": "Show Screen recorder button"
+}

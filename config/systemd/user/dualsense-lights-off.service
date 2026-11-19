@@ -1,0 +1,11 @@
+[Unit]
+Description=Keep the DualSense lights off (applies on every connect)
+
+[Service]
+ExecStartPre=-%h/.scripts/other/dualsense-lights-off.sh
+ExecStart=/usr/bin/dualsensectl monitor add %h/.scripts/other/dualsense-lights-off.sh
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

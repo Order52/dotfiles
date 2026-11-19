@@ -1,7 +1,9 @@
 accountsservice
+acpica
 alacritty
 alsa-firmware
 alsa-plugins
+alsa-tools
 alsa-utils
 archlinux-xdg-menu
 ark
@@ -77,6 +79,7 @@ easyeffects
 efibootmgr
 efitools
 egl-wayland
+epic-games-launcher-bin
 ethtool
 exfatprogs
 f2fs-tools
@@ -98,6 +101,7 @@ glances
 gnome-calculator
 gnome-keyring
 gnome-text-editor
+go
 gpu-screen-recorder-ui
 greetd
 greetd-tuigreet
@@ -174,6 +178,7 @@ micro
 miniupnpc
 mkinitcpio
 modemmanager
+msr-tools
 mtools
 mtr
 nano
@@ -186,6 +191,7 @@ networkmanager-openvpn
 nfs-utils
 nilfs-utils
 noctalia
+noise-suppression-for-voice
 noto-fonts
 noto-fonts-cjk
 noto-fonts-emoji
@@ -261,6 +267,7 @@ smartmontools
 snapper
 sof-firmware
 spectacle
+sshfs
 stress-ng
 sudo
 sunshine
@@ -317,7 +324,3 @@ xsettingsd
 yt-dlp
 zen-browser-bin
 zoxide
-android-tools
-zenity
-libnotify
-sshfs

@@ -1,5 +1,5 @@
 [Appearance]
-ColorScheme=Linux
+ColorScheme=Noctalia
 
 [General]
 Name=Black

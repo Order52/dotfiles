@@ -3,7 +3,7 @@ name        = "Quick Toggles"
 version     = "1.0.0"
 plugin_api  = 3
 author      = "sloppy"
-description = "Bar buttons that show their live state: refresh rate (Hz), gamemode on/off, CPU governor, screen recorder, fan, profile, RGB."
+description = "Bar buttons with live state: refresh rate, gamemode, CPU governor, recorder, and the TrueSense fan, power mode and RGB controls."
 
 [[widget]]
 id    = "refresh"
@@ -56,3 +56,39 @@ width  = 380
 height = 800
 placement       = "floating"
 open_near_click = true
+
+[[setting]]
+key       = "show_profile"
+type      = "bool"
+default   = true
+label_key = "settings.show_profile.label"
+
+[[setting]]
+key       = "show_fan"
+type      = "bool"
+default   = true
+label_key = "settings.show_fan.label"
+
+[[setting]]
+key       = "show_rgb"
+type      = "bool"
+default   = true
+label_key = "settings.show_rgb.label"
+
+[[setting]]
+key       = "show_refresh"
+type      = "bool"
+default   = true
+label_key = "settings.show_refresh.label"
+
+[[setting]]
+key       = "show_gamemode"
+type      = "bool"
+default   = true
+label_key = "settings.show_gamemode.label"
+
+[[setting]]
+key       = "show_recorder"
+type      = "bool"
+default   = true
+label_key = "settings.show_recorder.label"

@@ -29,6 +29,11 @@ hl.config({
     },
 })
 
+-- PS5 DualSense touchpad: never a desktop mouse. Games still get touches/clicks over hidraw.
+-- (USB name first, Bluetooth name second.)
+hl.device({ name = "sony-interactive-entertainment-dualsense-wireless-controller-touchpad", enabled = false })
+hl.device({ name = "dualsense-wireless-controller-touchpad", enabled = false })
+
 -- ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 -- ┃                      Gesture Configuration                  ┃
 -- ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

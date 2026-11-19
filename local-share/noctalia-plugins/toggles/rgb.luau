@@ -1,82 +1,33 @@
--- Keyboard RGB (Acer PH16-71, rgbkb). Shows the saved effect; click opens the RGB panel.
--- Middle click: random effect · IPC: noctalia msg plugin sloppy/toggles:rgb all <apply|random|off|set> [effect] [HEX]
-local CONFIG = noctalia.expandPath("~/.config/rgbkb/config.json")
-local REAR   = noctalia.expandPath("~/.config/rgbkb/rear.json")
-local PANEL  = "sloppy/toggles:rgb_panel"
-local NAMES  = { wave = "Wave", neon = "Neon", all = "Solid", breathe = "Breathe", ripple = "Ripple", snake = "Snake",
-                 heartbeat = "Pulse", snow = "Snow", fireball = "Fire", stars = "Stars", spot = "Spot",
-                 lightning = "Bolt", rain = "Rain" }
+-- Keyboard + rear light RGB (TrueSense). Click opens the panel · Middle click: keyboard on/off · Scroll: keyboard brightness
+local function isHidden(id) return noctalia.getConfig("show_" .. id) == false end
+-- IPC: noctalia msg plugin sloppy/toggles:rgb all <kb-on|kb-off|rear-on|rear-off>
+local PANEL = "sloppy/toggles:rgb_panel"
+local level = 25
 
-
--- Only shown when rgbkb is installed and the RGB keyboard (USB 04f2:0117) or the rear light (/dev/acer-rear) exists. Re-checked every 30 s, so it appears once installed.
-local NEEDS = [=[[ -x "$HOME/.local/bin/rgbkb" ] || exit 1; [ -e /dev/acer-rear ] && exit 0; for d in /sys/bus/usb/devices/*; do [ "$(cat $d/idVendor $d/idProduct 2>/dev/null | tr -d "\n")" = 04f20117 ] && exit 0; done; exit 1]=]
-local supported, checkedAt = false, -1e9
-local function checkSupport()
-  if os.time() - checkedAt < 30 then return end
-  checkedAt = os.time()
-  noctalia.runAsync("sh -c '" .. NEEDS .. "'", function(r)
-    supported = r ~= nil and r.exitCode == 0
-    barWidget.setVisible(supported)
-    if supported then update() end
-  end)
-end
-
-local function run(cmd)
-  noctalia.runAsync("sh -c 'PATH=$HOME/.local/bin:$PATH " .. cmd .. "'")
-end
+local function run(cmd) noctalia.runAsync(cmd) end
 
 function update()
-  noctalia.setUpdateInterval(3000)
-  checkSupport()
-  if not supported then return end
-  local raw = noctalia.readFile(CONFIG) or ""
-  local effect = raw:match('"effect"%s*:%s*"(%w+)"')
-  local hex = raw:match('"hexcolor"%s*:%s*"(%x+)"')
-  barWidget.setGlyph("keyboard")
-  barWidget.setText(effect and (NAMES[effect] or effect) or "RGB")
-  barWidget.setColor("on_surface_variant")
-  barWidget.setGlyphColor("tertiary")
-  local rear = noctalia.readFile(REAR) or ""
-  local rearText = "not set"
-  if rear ~= "" then
-    rearText = rear:match('"off"%s*:%s*true') and "off" or (rear:match('"effect"%s*:%s*"(%w+)"') or "?")
-  end
-  barWidget.setTooltip({
-    { "Keyboard RGB", effect and (NAMES[effect] or effect) or "not set" },
-    { "Color", hex and ("#" .. hex:upper()) or "-" },
-    { "Rear light", rearText },
-    { "Click", "RGB panel" }, { "Scroll", "brightness" }, { "Middle click", "random effect" } })
+  noctalia.setUpdateInterval(2000)
+  barWidget.setVisible(not isHidden("rgb"))
+  barWidget.setGlyph("keyboard") barWidget.setText("RGB")
+  barWidget.setColor("on_surface_variant") barWidget.setGlyphColor("tertiary")
+  barWidget.setTooltip({ { "TrueSense lighting", "keyboard + rear light" }, { "Click", "RGB panel" }, { "Scroll", "keyboard brightness" }, { "Middle click", "keyboard on/off" } })
 end
 
--- scroll on the button = brightness (0-32) of the current effect
-local lastScroll = 0
 function onScroll(axis, steps)
   if axis ~= "vertical" or steps == 0 then return end
-  local raw = noctalia.readFile(CONFIG) or ""
-  local effect = raw:match('"effect"%s*:%s*"(%w+)"')
-  if not effect or effect == "all" then return end
-  local hex = raw:match('"hexcolor"%s*:%s*"(%x+)"')
-  local speed = tonumber(raw:match('"speed"%s*:%s*([%d%.]+)')) or 10
-  local level = tonumber(raw:match('"level"%s*:%s*(%d+)')) or 0
-  local dir = raw:match('"direction"%s*:%s*(%d)')
-  level = math.max(0, math.min(32, level + (steps > 0 and -2 or 2)))
-  local cmd = "kbd-rgb-send " .. effect .. (hex and (" " .. hex) or "") .. " --speed " .. math.floor(speed) .. " --level " .. level
-  if effect == "wave" and dir then cmd = cmd .. " --direction " .. dir end
-  run(cmd)
-  noctalia.runAsync("noctalia msg osd-show keyboard 'Keyboard brightness: " .. level .. "/32'")
+  level = math.max(0, math.min(50, level + (steps > 0 and -5 or 5)))
+  run("truesense keyboard brightness " .. level)
+  run("noctalia msg osd-show keyboard 'Keyboard brightness: " .. level .. "/50'")
 end
 
 function onClick() noctalia.togglePanel(PANEL) end
 function onRightClick() noctalia.togglePanel(PANEL) end
-function onMiddleClick()
-  run("kbd-rgb random")
-  noctalia.runAsync("noctalia msg osd-show keyboard 'Keyboard RGB: random'")
+function onMiddleClick() run("truesense keyboard toggle") end
+function onIpc(event)
+  if event == "kb-on" then run("truesense keyboard on")
+  elseif event == "kb-off" then run("truesense keyboard off")
+  elseif event == "rear-on" then run("truesense rear on")
+  elseif event == "rear-off" then run("truesense rear off") end
 end
-function onIpc(event, payload)
-  if event == "apply" then run("kbd-rgb-send apply")
-  elseif event == "random" then run("kbd-rgb random")
-  elseif event == "off" then run("kbd-rgb-send all 000000")
-  elseif event == "set" and payload then run("kbd-rgb-send " .. tostring(payload):gsub("[^%w%s#%-%.]", "")) end
-end
-barWidget.setVisible(false)   -- hidden until the support check passes
 update()

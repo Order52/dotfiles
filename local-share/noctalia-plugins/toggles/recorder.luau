@@ -1,4 +1,5 @@
 -- Screen recorder button: live timer while recording, instant feedback on click.
+local function isHidden(id) return noctalia.getConfig("show_" .. id) == false end
 --   • recording  -> red "REC 01:23" (elapsed time from the pid file's mtime = recording start)
 --   • idle       -> dim icon only
 -- Click is handled here (not by a config action) so the display can flip immediately instead of
@@ -15,7 +16,7 @@ local function checkSupport()
   checkedAt = os.time()
   noctalia.runAsync("sh -c '" .. NEEDS .. "'", function(r)
     supported = r ~= nil and r.exitCode == 0
-    barWidget.setVisible(supported)
+    barWidget.setVisible(supported and not isHidden("recorder"))
     if supported then update() end
   end)
 end
@@ -44,13 +45,15 @@ local function state()
 end
 
 function update()
-  noctalia.setUpdateInterval(250)
   checkSupport()
   if not supported then return end
+  if isHidden("recorder") then barWidget.setVisible(false) return end
+  barWidget.setVisible(true)
   ticks = ticks + 1
   local rec, start = state()
   if ticks < suppressUntil then rec = false end
   lastRec = rec
+  noctalia.setUpdateInterval(rec and 250 or 1000)   -- fast timer only while recording
 
   barWidget.setGlyph("player-record")
   if rec then

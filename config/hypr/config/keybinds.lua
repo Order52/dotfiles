@@ -116,7 +116,7 @@ bind(mainMod .. " + K", exec("~/.config/hypr/scripts/scrolling.sh"))
 bind(mainMod .. " + B", noct("panel-toggle control-center bluetooth"), nil, "Bluetooth")
 
 -- Mute microphone / switch audio
-bind("F8", noct("mic-mute"))
+bind("F8", exec("~/.config/hypr/scripts/mic_mute_all.sh"))  -- Noctalia mic-mute + mute/unmute ALL input sources (also fires with Super held)
 bind("F5", exec("~/.config/hypr/scripts/switch_audio.sh sound"))
 bind("SHIFT + F5", exec("~/.config/hypr/scripts/switch_audio.sh mic"))
 
@@ -149,21 +149,21 @@ bind("XF86AudioPrev", noct("media previous"), nil, "Previous track")
 bind("XF86MonBrightnessUp",   noct("brightness-up"), rl)
 bind("XF86MonBrightnessDown", noct("brightness-down"), rl)
 
--- ── Keyboard backlight (Acer RGB keyboard, via rgbkb) ───────────
-bind("XF86KbdBrightnessUp",   exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true, locked = true }, "Keyboard RGB brightness up")
-bind("XF86KbdBrightnessDown", exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true, locked = true }, "Keyboard RGB brightness down")
-bind("XF86KbdLightOnOff",     exec("~/.local/bin/kbd-rgb-brightness toggle"), { locked = true }, "Keyboard RGB backlight on/off")
+-- ── Keyboard backlight (Acer RGB keyboard, via TrueSense) ───────────
+bind("XF86KbdBrightnessUp",   exec("~/.local/bin/ts-kbd-brightness up"),   { repeating = true, locked = true }, "Keyboard RGB brightness up")
+bind("XF86KbdBrightnessDown", exec("~/.local/bin/ts-kbd-brightness down"), { repeating = true, locked = true }, "Keyboard RGB brightness down")
+bind("XF86KbdLightOnOff",     exec("~/.local/bin/ts-kbd-brightness toggle"), { locked = true }, "Keyboard RGB backlight on/off")
 -- Own keys (the hardware Fn+F11/F12 are handled by the keyboard itself): Super+Alt+F11/F12 or Up/Down, Super+Alt+K = on/off
-bind("SUPER + ALT + F12",  exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
-bind("SUPER + ALT + F11",  exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
-bind("SUPER + ALT + Up",   exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
-bind("SUPER + ALT + Down", exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
-bind("SUPER + ALT + K",    exec("~/.local/bin/kbd-rgb-brightness toggle"), nil, "Keyboard RGB backlight on/off")
+bind("SUPER + ALT + F12",  exec("~/.local/bin/ts-kbd-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
+bind("SUPER + ALT + F11",  exec("~/.local/bin/ts-kbd-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
+bind("SUPER + ALT + Up",   exec("~/.local/bin/ts-kbd-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
+bind("SUPER + ALT + Down", exec("~/.local/bin/ts-kbd-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
+bind("SUPER + ALT + K",    exec("~/.local/bin/ts-kbd-brightness toggle"), nil, "Keyboard RGB backlight on/off")
 -- letter/punctuation keys cannot be swallowed by the keyboard's Fn row: Super+Alt+[ / ]  and  Super+Alt+- / =
-bind("SUPER + ALT + bracketright", exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
-bind("SUPER + ALT + bracketleft",  exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
-bind("SUPER + ALT + equal",        exec("~/.local/bin/kbd-rgb-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
-bind("SUPER + ALT + minus",        exec("~/.local/bin/kbd-rgb-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
+bind("SUPER + ALT + bracketright", exec("~/.local/bin/ts-kbd-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
+bind("SUPER + ALT + bracketleft",  exec("~/.local/bin/ts-kbd-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
+bind("SUPER + ALT + equal",        exec("~/.local/bin/ts-kbd-brightness up"),   { repeating = true }, "Keyboard RGB brightness up")
+bind("SUPER + ALT + minus",        exec("~/.local/bin/ts-kbd-brightness down"), { repeating = true }, "Keyboard RGB brightness down")
 
 -- ── Lock ────────────────────────────────────────────────────────
 bind(mainMod .. " + SHIFT + X", exec("swaylock-fancy -e -K -p 10 -f Hack-Regular"), nil, "Lock the screen")
@@ -342,3 +342,13 @@ bind("XF86AudioPause",   noct("media toggle"), { locked = true })
 -- Apps from the rice (gnome-calculator / gnome-text-editor)
 bind("XF86Calculator", exec("gnome-calculator"))
 bind(mainMod .. " + ALT + T", exec("gnome-text-editor --new-window"), nil, "Text editor")
+
+-- ── QSP games (Zireael): mouse back button = "Go back one step" ──
+-- The game always lists "Go back one step" as its first choice, and key 1 picks the first choice.
+-- Non-consuming, so the back button keeps working normally in every other app.
+bind("mouse:275", function()
+    local w = hl.get_active_window()
+    if w and w.class == "Apprun" and string.find(w.title or "", "Quest Soft Player", 1, true) then
+        hl.dispatch(hl.dsp.send_shortcut({ mods = "", key = "1", window = "address:" .. w.address }))
+    end
+end, { non_consuming = true }, "QSP game: mouse back button = go back one step")

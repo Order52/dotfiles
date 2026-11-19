@@ -20,10 +20,10 @@ rule({ match = { class = "^(zenity)$" }, float = true })
 rule({ match = { class = "^()$", title = "^(Steam - Self Updater)$" }, float = true })
 
 -- ── Opacity ─────────────────────────────────────────────────────
-rule({ match = { class = "^(thunar|nemo|dolphin)$" }, opacity = "0.92" })
+-- rule({ match = { class = "^(thunar|nemo|dolphin)$" }, opacity = "0.92" })
 -- rule({ match = { class = "^(discord|vesktop|armcord|webcord)$" }, opacity = "0.96" })
-rule({ match = { title = "^(QQ|Telegram)$" }, opacity = "0.95" })
-rule({ match = { title = "^(NetEase Cloud Music Gtk4)$" }, opacity = "0.95" })
+-- rule({ match = { title = "^(QQ|Telegram)$" }, opacity = "0.95" })
+-- rule({ match = { title = "^(NetEase Cloud Music Gtk4)$" }, opacity = "0.95" })
 
 -- ── General window rules ────────────────────────────────────────
 rule({

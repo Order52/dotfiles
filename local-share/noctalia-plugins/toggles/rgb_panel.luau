@@ -1,400 +1,239 @@
--- RGB panel (Acer PH16-71), two tabs: the keyboard (presets, effects, colors, speed, brightness, direction) and the rear light.
--- Keyboard changes run `rgbkb` (saved in ~/.config/rgbkb/config.json); rear-light changes run `acer-rear` (saved in rear.json). Both are re-applied at login.
-local CONFIG = noctalia.expandPath("~/.config/rgbkb/config.json")
-local REAR_CONFIG = noctalia.expandPath("~/.config/rgbkb/rear.json")
-local IDLE_FILE = noctalia.expandPath("~/.config/rgbkb/idle-off")   -- written by kbd-backlight-timeout: 1 = backlight off after 30 s idle
-local EFFECTS = {
-  { "wave", "Wave", false }, { "neon", "Neon", false }, { "all", "Solid", true }, { "breathe", "Breathe", true },
-  { "ripple", "Ripple", true }, { "snake", "Snake", true }, { "heartbeat", "Pulse", true }, { "snow", "Snow", true },
-  { "fireball", "Fire", true }, { "stars", "Stars", true }, { "spot", "Spot", true }, { "lightning", "Bolt", true },
-  { "rain", "Rain", true },
+-- RGB panel (TrueSense): keyboard looks, per-key colours, and the rear light with its three parts.
+local KB = { { "static", "Static" }, { "breathing", "Breathe" }, { "wave", "Wave" }, { "snake", "Snake" }, { "ripple", "Ripple" },
+  { "neon", "Neon" }, { "raindrop", "Rain" }, { "lightning", "Bolt" }, { "spot", "Spot" }, { "star", "Stars" },
+  { "fireball", "Fire" }, { "snow", "Snow" }, { "heartbeat", "Pulse" } }
+local REAR = { { "static", "Static" }, { "breathing", "Breathe" }, { "neon", "Neon" }, { "wave", "Wave" }, { "twinkling", "Twinkle" } }
+local GROUPS = { { "all", "All keys" }, { "wasd", "WASD" }, { "arrows", "Arrows" }, { "fkeys", "F1-F12" }, { "numrow", "1-0" },
+  { "letters", "Letters" }, { "numpad", "Numpad" }, { "esc", "Esc" }, { "space", "Space" }, { "enter", "Enter" }, { "predator", "PREDATOR" }, { "lshift", "Shift" } }
+local KEYROWS = {
+  { { "esc", "Esc" }, { "f1", "F1" }, { "f2", "F2" }, { "f3", "F3" }, { "f4", "F4" }, { "f5", "F5" }, { "f6", "F6" }, { "f7", "F7" }, { "f8", "F8" }, { "f9", "F9" }, { "f10", "F10" }, { "f11", "F11" }, { "f12", "F12" } },
+  { { "1", "1" }, { "2", "2" }, { "3", "3" }, { "4", "4" }, { "5", "5" }, { "6", "6" }, { "7", "7" }, { "8", "8" }, { "9", "9" }, { "0", "0" }, { "backspace", "Bksp" } },
+  { { "tab", "Tab" }, { "q", "Q" }, { "w", "W" }, { "e", "E" }, { "r", "R" }, { "t", "T" }, { "y", "Y" }, { "u", "U" }, { "i", "I" }, { "o", "O" }, { "p", "P" } },
+  { { "caps", "Caps" }, { "a", "A" }, { "s", "S" }, { "d", "D" }, { "f", "F" }, { "g", "G" }, { "h", "H" }, { "j", "J" }, { "k", "K" }, { "l", "L" }, { "enter", "Enter" } },
+  { { "lshift", "Shift" }, { "z", "Z" }, { "x", "X" }, { "c", "C" }, { "v", "V" }, { "b", "B" }, { "n", "N" }, { "m", "M" }, { "rshift", "Shift" } },
+  { { "ctrl", "Ctrl" }, { "win", "Win" }, { "lalt", "Alt" }, { "space", "Space" }, { "ralt", "Alt" }, { "left", "←" }, { "up", "↑" }, { "down", "↓" }, { "right", "→" } },
 }
--- { id, label, glyph, effect, hex, speed, level }
-local PRESETS = {
-  { "cyber",  "Cyber",  "bolt",       "wave",      nil,      10, 0 },
-  { "ocean",  "Ocean",  "droplet",    "breathe",   "0099FF", 5,  18 },
-  { "lava",   "Lava",   "flame",      "fireball",  "FF3300", 7,  24 },
-  { "matrix", "Matrix", "binary",     "rain",      "00FF55", 8,  20 },
-  { "aurora", "Aurora", "sparkles",   "neon",      nil,      6,  18 },
-  { "sunset", "Sunset", "sun",        "ripple",    "FF6A00", 5,  22 },
-  { "game",   "Gaming", "device-gamepad-2", "all", "FF0000", 0,  0 },
-  { "chill",  "Chill",  "moon",       "stars",     "B400FF", 4,  14 },
-}
-local COLORS = {
-  { "Red", "FF0000" }, { "Orange", "FF6A00" }, { "Yellow", "FFD000" }, { "Green", "00FF55" }, { "Cyan", "00FFD0" },
-  { "Blue", "00AAFF" }, { "Indigo", "3A3AFF" }, { "Purple", "B400FF" }, { "Pink", "FF00AA" }, { "White", "FFFFFF" },
-}
-local DIRS = { "→", "←", "↑", "↓", "↻", "↺" }
+local ZONES = { { "all", "All" }, { "left", "Left" }, { "middle", "Middle" }, { "right", "Right" } }
+local SW = { "#FF0000", "#FF6A00", "#FFD000", "#00FF55", "#00FFD0", "#00AAFF", "#3A3AFF", "#B400FF", "#FF00AA", "#FFFFFF" }
+local st = { tab = "kb", hex = "00AAFF", level = 25, kspeed = 5, target = "wasd", khex = "FF0000",
+             rear = "static", rhex = "00AEC7", rlevel = 100, speed = 3, zone = 1, z = { "00AEC7", "00AEC7", "00AEC7" } }
 
--- rear light: { id, label, colored }; wire modes static 0 · breathing 1 · neon 2 · wave 3 · twinkling 7, speed 1-5, brightness 0-100
-local REAR_EFFECTS = {
-  { "static", "Static", true }, { "breathing", "Breathe", true }, { "neon", "Neon", false },
-  { "wave", "Wave", false }, { "twinkling", "Twinkle", true },
-}
--- { id, label, effect, hex }
-local REAR_PRESETS = {
-  { "cyber", "Cyber", "wave", nil }, { "ocean", "Ocean", "breathing", "0099FF" },
-  { "lava", "Lava", "static", "FF3300" }, { "calm", "Calm", "breathing", "B400FF" },
-}
+local function run(cmd) noctalia.runAsync(cmd) end
 
-local st = { effect = "wave", hex = "00AAFF", speed = 10, level = 0, dir = 1, more = false, tab = "kb", idle = 0 }
-local rs = { effect = "static", hex = "00AEC7", speed = 3, level = 100, off = false, more = false }
-local dragging = false        -- a slider is being dragged: don't overwrite it from the file
-
-local function load()
-  local raw = noctalia.readFile(CONFIG) or ""
-  st.effect = raw:match('"effect"%s*:%s*"(%w+)"') or st.effect
-  st.hex = raw:match('"hexcolor"%s*:%s*"(%x+)"') or st.hex
-  st.speed = tonumber(raw:match('"speed"%s*:%s*([%d%.]+)')) or st.speed
-  st.level = tonumber(raw:match('"level"%s*:%s*(%d+)')) or tonumber(raw:match('"brightness"%s*:%s*(%d+)')) or st.level
-  st.dir = tonumber(raw:match('"direction"%s*:%s*(%d)')) or st.dir
-
-  st.idle = tonumber((noctalia.readFile(IDLE_FILE) or ""):match("(%d)")) or st.idle
-
-  local r = noctalia.readFile(REAR_CONFIG) or ""
-  rs.effect = r:match('"effect"%s*:%s*"(%w+)"') or rs.effect
-  rs.hex = r:match('"hexcolor"%s*:%s*"(%x+)"') or rs.hex
-  rs.speed = tonumber(r:match('"speed"%s*:%s*(%d+)')) or rs.speed
-  rs.level = tonumber(r:match('"level"%s*:%s*(%d+)')) or rs.level
-  rs.off = r:match('"off"%s*:%s*(%a+)') == "true"
-end
-
-local function hasColor(effect)
-  for _, e in ipairs(EFFECTS) do if e[1] == effect then return e[3] end end
-  return false
-end
-
-local function run(cmd)
-  noctalia.runAsync("sh -c 'PATH=$HOME/.local/bin:$PATH " .. cmd .. "'")
-end
-
-local function apply()
-  local cmd = "kbd-rgb-send " .. st.effect
-  if hasColor(st.effect) then cmd = cmd .. " " .. st.hex end
-  if st.effect ~= "all" then cmd = cmd .. " --speed " .. math.floor(st.speed) .. " --level " .. math.floor(st.level) end
-  if st.effect == "wave" then cmd = cmd .. " --direction " .. st.dir end
-  run(cmd)
-end
-
-local function lbl(t, size) return ui.label({ text = t, fontSize = size or 12, color = "on_surface_variant" }) end
-
-local function tabs()
-  return ui.row({ gap = 4 }, {
-    ui.button({ glyph = "keyboard", text = "Keyboard", flexGrow = 1, controlSize = "sm",
-      variant = st.tab == "kb" and "default" or "ghost", onClick = "onTabKb" }),
-    ui.button({ glyph = "bulb", text = "Rear light", flexGrow = 1, controlSize = "sm",
-      variant = st.tab == "rear" and "default" or "ghost", onClick = "onTabRear" }),
-  })
-end
-
-local function rearHasColor(effect)
-  for _, e in ipairs(REAR_EFFECTS) do if e[1] == effect then return e[3] end end
-  return false
-end
-
--- one `acer-rear set` carries the whole rear state; it saves rear.json itself
-local function rearApply()
-  if rs.off then run("acer-rear off"); return end
-  local cmd = "acer-rear set " .. rs.effect
-  if rearHasColor(rs.effect) then cmd = cmd .. " " .. rs.hex end
-  if rs.effect ~= "static" then cmd = cmd .. " --speed " .. math.floor(rs.speed) end
-  run(cmd .. " --level " .. math.max(1, math.floor(rs.level)))
-end
-
-local function renderRearPicker()
-  panel.render(ui.column({ gap = 12, padding = 16 }, {
-    ui.row({ gap = 10, align = "center" }, {
-      ui.button({ glyph = "arrow-left", text = "Back", variant = "ghost", controlSize = "sm", onClick = "onRearMore" }),
-      ui.column({ gap = 0, flexGrow = 1 }, {
-        ui.label({ text = "Rear light color", fontSize = 18, color = "tertiary" }),
-        ui.label({ text = "#" .. rs.hex .. "  ·  " .. rs.effect, fontSize = 12, color = "on_surface_variant" }),
-      }),
-    }),
-    ui.colorPicker({ value = "#" .. rs.hex, swatches = { "#FF0000", "#FF6A00", "#FFD000", "#00FF55", "#00FFD0", "#00AAFF", "#3A3AFF", "#B400FF", "#FF00AA", "#FFFFFF" },
-      onChange = "onRearPickerLive", onChangeEnd = "onRearPicker" }),
-    ui.button({ glyph = "check", text = "Done", variant = "default", onClick = "onRearMore" }),
-  }))
-end
-
-local function renderRear()
-  if rs.more and rearHasColor(rs.effect) then return renderRearPicker() end
-  local body = {
-    ui.row({ gap = 10, align = "center" }, {
-      ui.glyph({ name = "bulb", size = 26, color = rs.off and "on_surface_variant" or "tertiary" }),
-      ui.column({ gap = 0, flexGrow = 1 }, {
-        ui.label({ text = "Rear light", fontSize = 18, color = "tertiary" }),
-        ui.label({ text = rs.off and "Off" or "Acer Predator PH16-71", fontSize = 12, color = "on_surface_variant" }),
-      }),
-      ui.button({ glyph = rs.off and "bulb" or "bulb-off", tooltip = rs.off and "Turn on" or "Turn off",
-        variant = rs.off and "default" or "ghost", controlSize = "sm", onClick = "onRearToggle" }),
-    }),
-    tabs(),
-  }
-
-  body[#body + 1] = lbl("Presets")
-  local row = {}
-  for _, p in ipairs(REAR_PRESETS) do
-    row[#row + 1] = ui.button({ text = p[2], flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onRearPreset_" .. p[1] })
-  end
-  body[#body + 1] = ui.row({ gap = 4 }, row)
-
-  body[#body + 1] = lbl("Effect")
-  row = {}
-  for _, e in ipairs(REAR_EFFECTS) do
-    row[#row + 1] = ui.button({ text = e[2], flexGrow = 1, controlSize = "sm", fontSize = 11,
-      variant = (not rs.off and rs.effect == e[1]) and "default" or "ghost", onClick = "onRearEffect_" .. e[1] })
-  end
-  body[#body + 1] = ui.row({ gap = 4 }, row)
-
-  if rearHasColor(rs.effect) then
-    body[#body + 1] = lbl("Color  #" .. rs.hex)
-    local c1, c2 = {}, {}
-    for i, c in ipairs(COLORS) do
-      local b = ui.button({ text = c[1], flexGrow = 1, controlSize = "sm", fontSize = 11,
-        variant = (rs.hex == c[2]) and "default" or "ghost", onClick = "onRearColor_" .. i })
-      if i <= 5 then c1[#c1 + 1] = b else c2[#c2 + 1] = b end
+-- Live updates while a colour or slider is being dragged: one command at a time, and when it finishes the newest value is sent
+-- (so the keyboard follows the drag without a backlog of processes).
+local busy = {}
+local function live(key, build)
+  if busy[key] then busy[key] = "again"; return end
+  busy[key] = true
+  noctalia.runStream(build() .. " 2>&1; echo done", function(line)
+    local msg = tostring(line or "")
+    if msg:lower():find("error") or msg:lower():find("no animation") then
+      noctalia.runAsync("noctalia msg osd-show alert-triangle '" .. msg:gsub("'", ""):sub(1, 80) .. "'")
     end
-    body[#body + 1] = ui.row({ gap = 4 }, c1)
-    body[#body + 1] = ui.row({ gap = 4 }, c2)
-    body[#body + 1] = ui.row({ gap = 4 }, {
-      ui.button({ glyph = "palette", text = "Custom color…", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onRearMore" }),
-      ui.button({ glyph = "keyboard", text = "Match keyboard", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onRearMatch" }),
-    })
-  end
-
-  if rs.effect ~= "static" then
-    body[#body + 1] = lbl("Speed  " .. math.floor(rs.speed) .. " / 5")
-    body[#body + 1] = ui.slider({ min = 1, max = 5, step = 1, value = rs.speed, controlSize = "md", onChange = "onRearSpeed", onDragEnd = "onRearSpeedEnd" })
-  end
-  body[#body + 1] = lbl("Brightness  " .. (rs.off and 0 or math.floor(rs.level)) .. " %")
-  body[#body + 1] = ui.slider({ min = 0, max = 100, step = 5, value = rs.off and 0 or rs.level, controlSize = "md", onChange = "onRearLevel", onDragEnd = "onRearLevelEnd" })
-
-  panel.render(ui.column({ gap = 8, padding = 16 }, body))
-end
-
-local function renderPicker()
-  panel.render(ui.column({ gap = 12, padding = 16 }, {
-    ui.row({ gap = 10, align = "center" }, {
-      ui.button({ glyph = "arrow-left", text = "Back", variant = "ghost", controlSize = "sm", onClick = "onMore" }),
-      ui.column({ gap = 0, flexGrow = 1 }, {
-        ui.label({ text = "Custom color", fontSize = 18, color = "tertiary" }),
-        ui.label({ text = "#" .. st.hex .. "  ·  " .. (st.effect == "all" and "Solid" or st.effect), fontSize = 12, color = "on_surface_variant" }),
-      }),
-    }),
-    ui.colorPicker({ value = "#" .. st.hex, swatches = { "#FF0000", "#FF6A00", "#FFD000", "#00FF55", "#00FFD0", "#00AAFF", "#3A3AFF", "#B400FF", "#FF00AA", "#FFFFFF" },
-      onChange = "onPickerLive", onChangeEnd = "onPicker" }),
-    ui.button({ glyph = "check", text = "Done", variant = "default", onClick = "onMore" }),
-  }))
-end
-
-function render()
-  if st.tab == "rear" then return renderRear() end
-  if st.more and hasColor(st.effect) then return renderPicker() end
-  local body = {
-    ui.row({ gap = 10, align = "center" }, {
-      ui.glyph({ name = "keyboard", size = 26, color = "tertiary" }),
-      ui.column({ gap = 0, flexGrow = 1 }, {
-        ui.label({ text = "Keyboard RGB", fontSize = 18, color = "tertiary" }),
-        ui.label({ text = "Acer Predator PH16-71", fontSize = 12, color = "on_surface_variant" }),
-      }),
-      ui.button({ glyph = "bulb-off", tooltip = "Backlight off", variant = "ghost", controlSize = "sm", onClick = "onOff" }),
-    }),
-    tabs(),
-  }
-
-  -- presets (2 rows of 4)
-  body[#body + 1] = lbl("Presets")
-  local row = {}
-  for i, p in ipairs(PRESETS) do
-    row[#row + 1] = ui.button({ text = p[2], flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onPreset_" .. p[1] })
-    if #row == 4 then body[#body + 1] = ui.row({ gap = 4 }, row); row = {} end
-  end
-
-  -- effects (4 per row)
-  body[#body + 1] = lbl("Effect")
-  row = {}
-  for i, e in ipairs(EFFECTS) do
-    row[#row + 1] = ui.button({ text = e[2], flexGrow = 1, controlSize = "sm",
-      variant = (st.effect == e[1]) and "default" or "ghost", onClick = "onEffect_" .. e[1] })
-    if #row == 4 or i == #EFFECTS then body[#body + 1] = ui.row({ gap = 4 }, row); row = {} end
-  end
-
-  -- quick colors
-  if hasColor(st.effect) then
-    body[#body + 1] = lbl("Color  #" .. st.hex)
-    local c1, c2 = {}, {}
-    for i, c in ipairs(COLORS) do
-      local b = ui.button({ text = c[1], flexGrow = 1, controlSize = "sm", fontSize = 11,
-        variant = (st.hex == c[2]) and "default" or "ghost", onClick = "onColor_" .. i })
-      if i <= 5 then c1[#c1 + 1] = b else c2[#c2 + 1] = b end
-    end
-    body[#body + 1] = ui.row({ gap = 4 }, c1)
-    body[#body + 1] = ui.row({ gap = 4 }, c2)
-    body[#body + 1] = ui.button({ glyph = "palette", text = "Custom color…", controlSize = "sm", variant = "ghost", onClick = "onMore" })
-  end
-
-  if st.effect ~= "all" then
-    body[#body + 1] = lbl("Speed  " .. math.floor(st.speed) .. " / 11")
-    body[#body + 1] = ui.slider({ min = 1, max = 11, step = 1, value = st.speed, controlSize = "md", onChange = "onSpeed", onDragEnd = "onSpeedEnd" })
-    body[#body + 1] = lbl("Brightness  " .. math.floor(st.level) .. " / 32")
-    body[#body + 1] = ui.slider({ min = 0, max = 32, step = 1, value = st.level, controlSize = "md", onChange = "onLevel", onDragEnd = "onLevelEnd" })
-  end
-  if st.effect == "wave" then
-    local d = {}
-    for i, a in ipairs(DIRS) do
-      d[#d + 1] = ui.button({ text = a, flexGrow = 1, controlSize = "sm", variant = (st.dir == i) and "default" or "ghost", onClick = "onDir" .. i })
-    end
-    body[#body + 1] = lbl("Direction")
-    body[#body + 1] = ui.row({ gap = 4 }, d)
-  end
-
-  body[#body + 1] = ui.button({ glyph = "hourglass", text = "Backlight off after 30 s idle", controlSize = "sm",
-    variant = st.idle == 1 and "default" or "ghost", onClick = "onIdleToggle" })
-  body[#body + 1] = ui.row({ gap = 6 }, {
-    ui.button({ glyph = "dice", text = "Random", flexGrow = 1, variant = "ghost", onClick = "onRandom" }),
-    ui.button({ glyph = "refresh", text = "Reapply", flexGrow = 1, variant = "ghost", onClick = "onReapply" }),
-  })
-
-  panel.render(ui.column({ gap = 8, padding = 16 }, body))
-end
-
-local function pick(effect) st.effect = effect; apply(); render() end
-function onEffect_wave() pick("wave") end
-function onEffect_neon() pick("neon") end
-function onEffect_all() pick("all") end
-function onEffect_breathe() pick("breathe") end
-function onEffect_ripple() pick("ripple") end
-function onEffect_snake() pick("snake") end
-function onEffect_heartbeat() pick("heartbeat") end
-function onEffect_snow() pick("snow") end
-function onEffect_fireball() pick("fireball") end
-function onEffect_stars() pick("stars") end
-function onEffect_spot() pick("spot") end
-function onEffect_lightning() pick("lightning") end
-function onEffect_rain() pick("rain") end
-
-local function preset(id)
-  for _, p in ipairs(PRESETS) do
-    if p[1] == id then
-      st.effect, st.speed, st.level = p[4], p[6] > 0 and p[6] or st.speed, p[7]
-      if p[5] then st.hex = p[5] end
-      apply(); render(); return
-    end
-  end
-end
-function onPreset_cyber() preset("cyber") end
-function onPreset_ocean() preset("ocean") end
-function onPreset_lava() preset("lava") end
-function onPreset_matrix() preset("matrix") end
-function onPreset_aurora() preset("aurora") end
-function onPreset_sunset() preset("sunset") end
-function onPreset_game() preset("game") end
-function onPreset_chill() preset("chill") end
-
-local function color(i) st.hex = COLORS[i][2]; apply(); render() end
-function onColor_1() color(1) end
-function onColor_2() color(2) end
-function onColor_3() color(3) end
-function onColor_4() color(4) end
-function onColor_5() color(5) end
-function onColor_6() color(6) end
-function onColor_7() color(7) end
-function onColor_8() color(8) end
-function onColor_9() color(9) end
-function onColor_10() color(10) end
-function onMore() st.more = not st.more; render() end
-local function parseHex(v)
-  local h = tostring(v or ""):gsub("#", ""):sub(1, 6)
-  if #h == 6 and h:match("^%x+$") then return h:upper() end
-end
-function onPickerLive(v) local h = parseHex(v); if h then st.hex = h end end    -- keep the value, no re-render while dragging
-function onPicker(v) local h = parseHex(v); if h then st.hex = h; apply() end end
-
-function onSpeed(v) dragging = true; st.speed = tonumber(v) or st.speed; render() end
-function onSpeedEnd(v) st.speed = tonumber(v) or st.speed; apply(); dragging = false end
-function onLevel(v) dragging = true; st.level = tonumber(v) or st.level; render() end
-function onLevelEnd(v) st.level = tonumber(v) or st.level; apply(); dragging = false end
-function onDir1() st.dir = 1; apply(); render() end
-function onDir2() st.dir = 2; apply(); render() end
-function onDir3() st.dir = 3; apply(); render() end
-function onDir4() st.dir = 4; apply(); render() end
-function onDir5() st.dir = 5; apply(); render() end
-function onDir6() st.dir = 6; apply(); render() end
-function onRandom() run("kbd-rgb random") end
-function onReapply() apply() end
-function onOff() run("kbd-rgb-send all 000000") end
-function onIdleToggle() st.idle = 1 - st.idle; run("kbd-backlight-timeout " .. (st.idle == 1 and "on" or "off") .. " --wait"); render() end
-
--- rear light tab
-function onTabKb() st.tab = "kb"; render() end
-function onTabRear() st.tab = "rear"; load(); render() end
-function onRearToggle() rs.off = not rs.off; run(rs.off and "acer-rear off" or "acer-rear on"); render() end
-local function rearEffect(e) rs.effect = e; rs.off = false; rearApply(); render() end
-function onRearEffect_static() rearEffect("static") end
-function onRearEffect_breathing() rearEffect("breathing") end
-function onRearEffect_neon() rearEffect("neon") end
-function onRearEffect_wave() rearEffect("wave") end
-function onRearEffect_twinkling() rearEffect("twinkling") end
-local function rearPreset(id)
-  for _, p in ipairs(REAR_PRESETS) do
-    if p[1] == id then
-      rs.effect, rs.off = p[3], false
-      if p[4] then rs.hex = p[4] end
-      rearApply(); render(); return
-    end
-  end
-end
-function onRearPreset_cyber() rearPreset("cyber") end
-function onRearPreset_ocean() rearPreset("ocean") end
-function onRearPreset_lava() rearPreset("lava") end
-function onRearPreset_calm() rearPreset("calm") end
-local function rearColor(i) rs.hex = COLORS[i][2]; rs.off = false; rearApply(); render() end
-function onRearColor_1() rearColor(1) end
-function onRearColor_2() rearColor(2) end
-function onRearColor_3() rearColor(3) end
-function onRearColor_4() rearColor(4) end
-function onRearColor_5() rearColor(5) end
-function onRearColor_6() rearColor(6) end
-function onRearColor_7() rearColor(7) end
-function onRearColor_8() rearColor(8) end
-function onRearColor_9() rearColor(9) end
-function onRearColor_10() rearColor(10) end
-function onRearMore() rs.more = not rs.more; render() end
-function onRearPickerLive(v) local h = parseHex(v); if h then rs.hex = h end end
-function onRearPicker(v) local h = parseHex(v); if h then rs.hex = h; rs.off = false; rearApply() end end
-function onRearMatch() rs.hex = st.hex; rs.off = false; rearApply(); render() end
-function onRearSpeed(v) dragging = true; rs.speed = tonumber(v) or rs.speed; render() end
-function onRearSpeedEnd(v) rs.speed = tonumber(v) or rs.speed; rs.off = false; rearApply(); dragging = false end
-function onRearLevel(v) dragging = true; local n = tonumber(v) or rs.level; rs.off = n <= 0; if n > 0 then rs.level = n end; render() end
-function onRearLevelEnd(v)
-  local n = tonumber(v) or rs.level
-  rs.off = n <= 0
-  if n > 0 then rs.level = n end
-  run("acer-rear level " .. math.floor(n))
-  dragging = false
-end
-
--- Live sync: keyboard brightness keys, the bar scroll, `kbd-rgb` and presets all change the saved config behind the panel's back,
--- so while the panel is open a bounded ticker re-reads it once a second and redraws when it changed.
-local gen = 0
-local function snapshot()
-  return st.idle .. "|" .. st.effect .. "|" .. st.hex .. "|" .. st.speed .. "|" .. st.level .. "|" .. st.dir
-    .. "|" .. rs.effect .. "|" .. rs.hex .. "|" .. rs.speed .. "|" .. rs.level .. "|" .. tostring(rs.off)
-end
-function onOpen()
-  load(); st.more = false; rs.more = false; dragging = false
-  run("kbd-backlight-timeout get")      -- refreshes the saved flag (the panel picks it up on the next tick)
-  gen = gen + 1
-  local mine = gen
-  local shown = nil
-  noctalia.runStream("for i in $(seq 600); do echo; sleep 1; done", function()
-    if mine ~= gen or dragging or st.more or rs.more then return end
-    local before = snapshot()
-    load()
-    if snapshot() ~= before then
-      render()
+    if msg:find("done") then
+      local again = busy[key] == "again"; busy[key] = nil
+      if again then live(key, build) end
     end
   end)
-  render()
 end
-function onClose() gen = gen + 1 end
+
+local function clean(h) return (tostring(h):gsub("[^%x]", ""):sub(1, 6)) end
+
+local function tabs()
+  local function tab(id, glyph, text) return ui.button({ glyph = glyph, text = text, flexGrow = 1, controlSize = "sm", variant = st.tab == id and "default" or "ghost", onClick = "onTab_" .. id }) end
+  return ui.row({ gap = 4 }, { tab("kb", "keyboard", "Looks"), tab("keys", "palette", "Per key"), tab("rear", "bulb", "Rear") })
+end
+
+local function chips(list, prefix, selected)
+  local rows, row = {}, {}
+  for i, e in ipairs(list) do
+    row[#row + 1] = ui.button({ text = e[2], controlSize = "sm", flexGrow = 1, variant = (selected == i) and "default" or "ghost", onClick = prefix .. i })
+    if #row == 4 or i == #list then rows[#rows + 1] = ui.row({ gap = 4 }, row); row = {} end
+  end
+  return ui.column({ gap = 4 }, rows)
+end
+
+local function cap(t) return ui.label({ text = t, fontSize = 12, color = "on_surface_variant" }) end
+
+local function rearCmd()
+  local zs = st.z[1] .. "," .. st.z[2] .. "," .. st.z[3]
+  if st.rear == "static" then return "truesense rear set static --zones " .. zs .. " --brightness " .. st.rlevel .. " --speed " .. st.speed end
+  return "truesense rear set " .. st.rear .. " --color " .. st.rhex .. " --brightness " .. st.rlevel .. " --speed " .. st.speed
+end
+local function rearApply() live("rear", rearCmd) end
+
+function render()
+  local body
+  if st.tab == "kb" then
+    body = {
+      tabs(),
+      ui.row({ gap = 4 }, {
+        ui.button({ glyph = "power", text = "On", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onKbOn" }),
+        ui.button({ glyph = "power-off", text = "Off", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onKbOff" }),
+        ui.button({ glyph = "refresh", text = "Stock", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onKbRestore" }),
+      }),
+      cap("Effect"),
+      chips(KB, "onKb", nil),
+      cap("Colour of the current effect (stays in the same effect)"),
+      ui.colorPicker({ value = "#" .. st.hex, swatches = SW, onChange = "onKbColorLive", onChangeEnd = "onKbColor" }),
+      cap("Brightness  " .. st.level .. " / 50  (Fn+F11 / Fn+F12 also work)"),
+      ui.slider({ min = 0, max = 50, step = 5, value = st.level, controlSize = "md", onChange = "onKbLevel", onDragEnd = "onKbLevelEnd" }),
+      cap("Effect speed  " .. st.kspeed .. " / 11   (for animated effects: pick one above first)"),
+      ui.slider({ min = 1, max = 11, step = 1, value = st.kspeed, controlSize = "md", onChange = "onKbSpeed", onDragEnd = "onKbSpeedEnd" }),
+      ui.row({ gap = 4 }, {
+        ui.button({ text = "Fill all keys", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onKbFill" }),
+        ui.button({ text = "Rainbow", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onKbRainbow" }),
+      }),
+    }
+  elseif st.tab == "keys" then
+    body = {
+      tabs(),
+      cap("Pick keys on a picture of the keyboard, then choose their colour."),
+      ui.button({ glyph = "keyboard", text = "Open the keyboard editor", flexGrow = 1, variant = "default", onClick = "onEditor" }),
+      cap("Quick looks"),
+      ui.row({ gap = 4 }, {
+        ui.button({ text = "Rainbow", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onKbRainbow" }),
+        ui.button({ text = "Fill with colour", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onKbFill" }),
+        ui.button({ text = "Stock", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onKbRestore" }),
+      }),
+      ui.colorPicker({ value = "#" .. st.hex, swatches = SW, onChange = "onKbColorLive", onChangeEnd = "onKbColor" }),
+    }
+  else
+    body = {
+      tabs(),
+      ui.row({ gap = 4 }, {
+        ui.button({ glyph = "bulb", text = "On", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onRearOn" }),
+        ui.button({ glyph = "bulb-off", text = "Off", flexGrow = 1, controlSize = "sm", variant = "ghost", onClick = "onRearOff" }),
+      }),
+      cap("Effect"),
+      chips(REAR, "onRear", nil),
+      cap(st.rear == "static" and "Part of the light bar (static can colour left, middle and right separately)" or "Colour (one colour for the whole bar)"),
+    }
+    if st.rear == "static" then body[#body + 1] = chips(ZONES, "onZone", st.zone) end
+    body[#body + 1] = ui.colorPicker({ value = "#" .. (st.rear == "static" and (st.zone == 1 and st.z[1] or st.z[st.zone - 1]) or st.rhex), swatches = SW, onChange = "onRearColorLive", onChangeEnd = "onRearColor" })
+    body[#body + 1] = cap("Speed  " .. st.speed .. " / 5")
+    body[#body + 1] = ui.slider({ min = 1, max = 5, step = 1, value = st.speed, controlSize = "md", onChange = "onRearSpeed", onDragEnd = "onRearSpeedEnd" })
+    body[#body + 1] = cap("Brightness  " .. st.rlevel .. " %")
+    body[#body + 1] = ui.slider({ min = 10, max = 100, step = 10, value = st.rlevel, controlSize = "md", onChange = "onRearLevel", onDragEnd = "onRearLevelEnd" })
+  end
+  panel.render(ui.column({ gap = 10, padding = 16 }, body))
+end
+
+function onTab_kb() st.tab = "kb"; render() end
+function onTab_keys() st.tab = "keys"; render() end
+function onTab_rear() st.tab = "rear"; render() end
+
+-- Looks
+function onKbOn() run("truesense keyboard on") end
+function onKbOff() run("truesense keyboard off") end
+function onKbRestore() run("truesense keyboard restore") end
+local function kbEffect(i) run("truesense keyboard effect " .. KB[i][1] .. " --color " .. st.hex .. " --speed " .. st.kspeed .. " --brightness " .. math.max(st.level, 10)) end
+function onKb1() kbEffect(1) end function onKb2() kbEffect(2) end function onKb3() kbEffect(3) end function onKb4() kbEffect(4) end
+function onKb5() kbEffect(5) end function onKb6() kbEffect(6) end function onKb7() kbEffect(7) end function onKb8() kbEffect(8) end
+function onKb9() kbEffect(9) end function onKb10() kbEffect(10) end function onKb11() kbEffect(11) end function onKb12() kbEffect(12) end
+function onKb13() kbEffect(13) end
+function onKbSpeed(v) v = tonumber(v); if v then st.kspeed = math.floor(v); live("kbspeed", function() return "truesense keyboard speed " .. st.kspeed end) end end
+function onKbSpeedEnd(v) st.kspeed = math.floor(tonumber(v) or st.kspeed); live("kbspeed", function() return "truesense keyboard speed " .. st.kspeed end); render() end
+function onKbColorLive(v) st.hex = clean(v); live("kbcolor", function() return "truesense keyboard color " .. st.hex end) end
+function onKbColor(v) st.hex = clean(v); live("kbcolor", function() return "truesense keyboard color " .. st.hex end) end
+function onKbFill() run("truesense keyboard fill " .. st.hex) end
+function onKbRainbow() run("truesense keyboard rainbow") end
+function onKbLevel(v) v = tonumber(v); if v then st.level = math.floor(v); live("kblevel", function() return "truesense keyboard brightness " .. st.level end) end end
+function onKbLevelEnd(v) st.level = math.floor(tonumber(v) or st.level); live("kblevel", function() return "truesense keyboard brightness " .. st.level end); render() end
+
+-- Per key
+local function paint(hex) run("truesense keyboard paint " .. st.target .. "=" .. hex) end
+local function group(i) st.target = GROUPS[i][1]; render() end
+function onGroup1() group(1) end function onGroup2() group(2) end function onGroup3() group(3) end function onGroup4() group(4) end
+function onGroup5() group(5) end function onGroup6() group(6) end function onGroup7() group(7) end function onGroup8() group(8) end
+function onGroup9() group(9) end function onGroup10() group(10) end function onGroup11() group(11) end function onGroup12() group(12) end
+function onKey_esc() st.target = "esc"; render() end
+function onKey_f1() st.target = "f1"; render() end
+function onKey_f2() st.target = "f2"; render() end
+function onKey_f3() st.target = "f3"; render() end
+function onKey_f4() st.target = "f4"; render() end
+function onKey_f5() st.target = "f5"; render() end
+function onKey_f6() st.target = "f6"; render() end
+function onKey_f7() st.target = "f7"; render() end
+function onKey_f8() st.target = "f8"; render() end
+function onKey_f9() st.target = "f9"; render() end
+function onKey_f10() st.target = "f10"; render() end
+function onKey_f11() st.target = "f11"; render() end
+function onKey_f12() st.target = "f12"; render() end
+function onKey_1() st.target = "1"; render() end
+function onKey_2() st.target = "2"; render() end
+function onKey_3() st.target = "3"; render() end
+function onKey_4() st.target = "4"; render() end
+function onKey_5() st.target = "5"; render() end
+function onKey_6() st.target = "6"; render() end
+function onKey_7() st.target = "7"; render() end
+function onKey_8() st.target = "8"; render() end
+function onKey_9() st.target = "9"; render() end
+function onKey_0() st.target = "0"; render() end
+function onKey_backspace() st.target = "backspace"; render() end
+function onKey_tab() st.target = "tab"; render() end
+function onKey_q() st.target = "q"; render() end
+function onKey_w() st.target = "w"; render() end
+function onKey_e() st.target = "e"; render() end
+function onKey_r() st.target = "r"; render() end
+function onKey_t() st.target = "t"; render() end
+function onKey_y() st.target = "y"; render() end
+function onKey_u() st.target = "u"; render() end
+function onKey_i() st.target = "i"; render() end
+function onKey_o() st.target = "o"; render() end
+function onKey_p() st.target = "p"; render() end
+function onKey_caps() st.target = "caps"; render() end
+function onKey_a() st.target = "a"; render() end
+function onKey_s() st.target = "s"; render() end
+function onKey_d() st.target = "d"; render() end
+function onKey_f() st.target = "f"; render() end
+function onKey_g() st.target = "g"; render() end
+function onKey_h() st.target = "h"; render() end
+function onKey_j() st.target = "j"; render() end
+function onKey_k() st.target = "k"; render() end
+function onKey_l() st.target = "l"; render() end
+function onKey_enter() st.target = "enter"; render() end
+function onKey_lshift() st.target = "lshift"; render() end
+function onKey_z() st.target = "z"; render() end
+function onKey_x() st.target = "x"; render() end
+function onKey_c() st.target = "c"; render() end
+function onKey_v() st.target = "v"; render() end
+function onKey_b() st.target = "b"; render() end
+function onKey_n() st.target = "n"; render() end
+function onKey_m() st.target = "m"; render() end
+function onKey_rshift() st.target = "rshift"; render() end
+function onKey_ctrl() st.target = "ctrl"; render() end
+function onKey_win() st.target = "win"; render() end
+function onKey_lalt() st.target = "lalt"; render() end
+function onKey_space() st.target = "space"; render() end
+function onKey_ralt() st.target = "ralt"; render() end
+function onKey_left() st.target = "left"; render() end
+function onKey_up() st.target = "up"; render() end
+function onKey_down() st.target = "down"; render() end
+function onKey_right() st.target = "right"; render() end
+function onPaintLive(v) st.khex = clean(v); live("paint", function() return "truesense keyboard paint " .. st.target .. "=" .. st.khex end) end
+function onPaint(v) st.khex = clean(v); live("paint", function() return "truesense keyboard paint " .. st.target .. "=" .. st.khex end) end
+function onPaintNow() paint(st.khex) end
+function onPaintBlack() paint("000000") end
+
+-- Rear light
+function onRearOn() run("truesense rear on") end
+function onRearOff() run("truesense rear off") end
+local function rearEffect(i) st.rear = REAR[i][1]; rearApply(); render() end
+function onRear1() rearEffect(1) end function onRear2() rearEffect(2) end function onRear3() rearEffect(3) end
+function onRear4() rearEffect(4) end function onRear5() rearEffect(5) end
+local function zone(i) st.zone = i; render() end
+function onZone1() zone(1) end function onZone2() zone(2) end function onZone3() zone(3) end function onZone4() zone(4) end
+local function setRearColor(h)
+  st.rhex = h
+  if st.zone == 1 then st.z = { h, h, h } else st.z[st.zone - 1] = h end
+end
+function onRearColorLive(v) setRearColor(clean(v)); rearApply() end
+function onRearColor(v) setRearColor(clean(v)); rearApply() end
+function onRearSpeed(v) v = tonumber(v); if v then st.speed = math.floor(v); rearApply() end end
+function onRearSpeedEnd(v) st.speed = math.floor(tonumber(v) or st.speed); rearApply(); render() end
+function onRearLevel(v) v = tonumber(v); if v then st.rlevel = math.floor(v); rearApply() end end
+function onRearLevelEnd(v) st.rlevel = math.floor(tonumber(v) or st.rlevel); rearApply(); render() end
+function onEditor() run("sh -c 'truesense gui --page keys || truesense gui'"); panel.close() end
+function onOpen() render() end
