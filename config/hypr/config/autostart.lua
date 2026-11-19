@@ -11,6 +11,9 @@ hl.on("hyprland.start", function()
     run("pgrep -x noctalia >/dev/null || noctalia")
     run("brightnessctl set 0%")
 
+    -- GTK title bars: no buttons on Hyprland (Plasma sets min/max/close at its login)
+    run("~/.local/bin/gtk-titlebuttons hyprland")
+
     -- KDE Wallet
     run("/usr/lib/pam_kwallet_init")
 

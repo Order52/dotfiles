@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Per-session GTK title-bar buttons.
+#   gtk-titlebuttons hyprland  -> no buttons (tiling WM: close via keybind)
+#   gtk-titlebuttons plasma    -> minimize, maximize, close (like KWin)
+# Called from Hyprland autostart (hypr/config/autostart.lua) and from
+# ~/.config/plasma-workspace/env/gtk-titlebuttons.sh at Plasma login.
+# Sets every place GTK reads the layout from: gsettings (libadwaita/GTK4 on
+# Wayland via the portal), settings.ini (GTK3/GTK4 fallback), xsettingsd (X11 apps).
+set -u
+
+case "${1:-}" in
+    hyprland) layout=":" ;;   # no buttons at all (close with the Hyprland keybind)
+    plasma|kde) layout="icon:minimize,maximize,close" ;;
+    *) echo "usage: gtk-titlebuttons hyprland|plasma" >&2; exit 1 ;;
+esac
+
+cfg="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+command -v gsettings >/dev/null && \
+    gsettings set org.gnome.desktop.wm.preferences button-layout "$layout" 2>/dev/null
+
+for f in "$cfg/gtk-3.0/settings.ini" "$cfg/gtk-4.0/settings.ini"; do
+    [ -f "$f" ] || continue
+    if grep -q '^gtk-decoration-layout=' "$f"; then
+        sed -i "s/^gtk-decoration-layout=.*/gtk-decoration-layout=$layout/" "$f"
+    else
+        sed -i "/^\[Settings\]/a gtk-decoration-layout=$layout" "$f"
+    fi
+done
+
+xs="$cfg/xsettingsd/xsettingsd.conf"
+if [ -f "$xs" ]; then
+    sed -i "s|^Gtk/DecorationLayout .*|Gtk/DecorationLayout \"$layout\"|" "$xs"
+    pkill -HUP -x xsettingsd 2>/dev/null
+fi
+exit 0
