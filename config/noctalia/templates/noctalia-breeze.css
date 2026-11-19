@@ -1,0 +1,551 @@
+/*
+ * Noctalia palette -> Breeze GTK (same mapping as the qt template) (Noctalia user template: noctalia_breeze)
+ * Rendered to ~/.config/gtk-3.0/noctalia-breeze.css and ~/.config/gtk-4.0/noctalia-breeze.css.
+ * Uses exactly the tokens of Noctalia's built-in qt template (qt6ct/qt5ct palette),
+ * so Breeze-GTK widgets get the same colors as Breeze-Qt widgets.
+ * Imported LAST from gtk.css so it overrides Breeze defaults and noctalia.css.
+ *
+ * Qt palette mapping (qtct.conf):
+ *   window/base        = background         windowText/text = on_background
+ *   button             = surface            buttonText      = on_surface
+ *   highlight          = primary_container  highlightedText = on_primary_container
+ *   link               = secondary          linkVisited     = primary
+ *   alternateBase      = surface_variant    toolTipBase     = surface_variant
+ *   accent             = primary
+ */
+
+/* ---- palette ---------------------------------------------------------- */
+@define-color nb_window       {{colors.background.default.hex}};
+@define-color nb_window_text  {{colors.on_background.default.hex}};
+@define-color nb_base         {{colors.background.default.hex}};
+@define-color nb_text         {{colors.on_background.default.hex}};
+@define-color nb_button       {{colors.surface.default.hex}};
+@define-color nb_button_text  {{colors.on_surface.default.hex}};
+@define-color nb_highlight    {{colors.primary_container.default.hex}};
+@define-color nb_highlight_fg {{colors.on_primary_container.default.hex}};
+@define-color nb_alt_base     {{colors.surface_variant.default.hex}};
+@define-color nb_tooltip      {{colors.surface_variant.default.hex}};
+@define-color nb_tooltip_text {{colors.on_surface.default.hex}};
+@define-color nb_link         {{colors.secondary.default.hex}};
+@define-color nb_link_visited {{colors.primary.default.hex}};
+@define-color nb_accent       {{colors.primary.default.hex}};
+@define-color nb_error        {{colors.error.default.hex}};
+@define-color nb_on_error     {{colors.on_error.default.hex}};
+@define-color nb_warning      {{colors.tertiary.default.hex}};
+@define-color nb_shade        {{colors.shadow.default.hex}};
+/* Breeze-Qt frame outline = mix(window, windowText, 0.25) */
+@define-color nb_frame        mix(@nb_window, @nb_window_text, 0.25);
+@define-color nb_frame_dim    mix(@nb_window, @nb_window_text, 0.12);
+@define-color nb_disabled_fg  mix(@nb_window, @nb_window_text, 0.45);
+
+/* ---- Breeze GTK named colors (same set kde-gtk-config writes) --------- */
+@define-color theme_fg_color_breeze @nb_window_text;
+@define-color theme_text_color_breeze @nb_text;
+@define-color theme_bg_color_breeze @nb_window;
+@define-color theme_base_color_breeze @nb_base;
+@define-color content_view_bg_breeze @nb_base;
+@define-color theme_selected_bg_color_breeze @nb_highlight;
+@define-color theme_selected_fg_color_breeze @nb_highlight_fg;
+@define-color theme_hovering_selected_bg_color_breeze @nb_highlight;
+@define-color theme_view_hover_decoration_color_breeze @nb_highlight;
+@define-color theme_view_active_decoration_color_breeze @nb_highlight;
+
+@define-color theme_button_background_normal_breeze @nb_button;
+@define-color theme_button_background_backdrop_breeze @nb_button;
+@define-color theme_button_background_insensitive_breeze @nb_button;
+@define-color theme_button_background_backdrop_insensitive_breeze @nb_button;
+@define-color theme_button_foreground_normal_breeze @nb_button_text;
+@define-color theme_button_foreground_backdrop_breeze @nb_button_text;
+@define-color theme_button_foreground_active_breeze @nb_highlight_fg;
+@define-color theme_button_foreground_active_backdrop_breeze @nb_highlight_fg;
+@define-color theme_button_foreground_insensitive_breeze @nb_disabled_fg;
+@define-color theme_button_foreground_backdrop_insensitive_breeze @nb_disabled_fg;
+@define-color theme_button_foreground_active_insensitive_breeze @nb_disabled_fg;
+@define-color theme_button_foreground_active_backdrop_insensitive_breeze @nb_disabled_fg;
+@define-color theme_button_decoration_hover_breeze @nb_highlight;
+@define-color theme_button_decoration_hover_backdrop_breeze @nb_highlight;
+@define-color theme_button_decoration_focus_breeze @nb_highlight;
+@define-color theme_button_decoration_focus_backdrop_breeze @nb_highlight;
+@define-color theme_button_decoration_hover_insensitive_breeze @nb_frame_dim;
+@define-color theme_button_decoration_hover_backdrop_insensitive_breeze @nb_frame_dim;
+@define-color theme_button_decoration_focus_insensitive_breeze @nb_frame_dim;
+@define-color theme_button_decoration_focus_backdrop_insensitive_breeze @nb_frame_dim;
+
+@define-color theme_titlebar_background_breeze @nb_window;
+@define-color theme_titlebar_background_light_breeze @nb_window;
+@define-color theme_titlebar_background_backdrop_breeze @nb_window;
+@define-color theme_titlebar_foreground_breeze @nb_window_text;
+@define-color theme_titlebar_foreground_backdrop_breeze @nb_window_text;
+@define-color theme_titlebar_foreground_insensitive_breeze @nb_disabled_fg;
+@define-color theme_titlebar_foreground_insensitive_backdrop_breeze @nb_disabled_fg;
+@define-color theme_header_background_breeze @nb_window;
+@define-color theme_header_background_light_breeze @nb_window;
+@define-color theme_header_background_backdrop_breeze @nb_window;
+@define-color theme_header_foreground_breeze @nb_window_text;
+@define-color theme_header_foreground_backdrop_breeze @nb_window_text;
+@define-color theme_header_foreground_insensitive_breeze @nb_disabled_fg;
+@define-color theme_header_foreground_insensitive_backdrop_breeze @nb_disabled_fg;
+
+/* Qt inactive palette == active palette, so unfocused windows look the same */
+@define-color theme_unfocused_fg_color_breeze @nb_window_text;
+@define-color theme_unfocused_text_color_breeze @nb_text;
+@define-color theme_unfocused_bg_color_breeze @nb_window;
+@define-color theme_unfocused_base_color_breeze @nb_base;
+@define-color theme_unfocused_view_bg_color_breeze @nb_base;
+@define-color theme_unfocused_view_text_color_breeze @nb_text;
+@define-color theme_unfocused_selected_bg_color_breeze @nb_highlight;
+@define-color theme_unfocused_selected_bg_color_alt_breeze @nb_highlight;
+@define-color theme_unfocused_selected_fg_color_breeze @nb_highlight_fg;
+
+@define-color insensitive_bg_color_breeze @nb_window;
+@define-color insensitive_fg_color_breeze @nb_disabled_fg;
+@define-color insensitive_base_color_breeze @nb_base;
+@define-color insensitive_base_fg_color_breeze @nb_disabled_fg;
+@define-color insensitive_selected_bg_color_breeze alpha(@nb_highlight, 0.5);
+@define-color insensitive_selected_fg_color_breeze @nb_disabled_fg;
+@define-color insensitive_unfocused_bg_color_breeze @nb_window;
+@define-color insensitive_unfocused_fg_color_breeze @nb_disabled_fg;
+@define-color insensitive_unfocused_selected_bg_color_breeze alpha(@nb_highlight, 0.5);
+@define-color insensitive_unfocused_selected_fg_color_breeze @nb_disabled_fg;
+
+@define-color borders_breeze @nb_frame;
+@define-color unfocused_borders_breeze @nb_frame;
+@define-color insensitive_borders_breeze @nb_frame_dim;
+@define-color unfocused_insensitive_borders_breeze @nb_frame_dim;
+
+@define-color tooltip_background_breeze @nb_tooltip;
+@define-color tooltip_text_breeze @nb_tooltip_text;
+@define-color tooltip_border_breeze @nb_frame;
+
+@define-color link_color_breeze @nb_link;
+@define-color link_visited_color_breeze @nb_link_visited;
+
+@define-color error_color_breeze @nb_error;
+@define-color error_color_backdrop_breeze @nb_error;
+@define-color error_color_insensitive_breeze alpha(@nb_error, 0.4);
+@define-color error_color_insensitive_backdrop_breeze alpha(@nb_error, 0.4);
+@define-color warning_color_breeze @nb_warning;
+@define-color warning_color_backdrop_breeze @nb_warning;
+@define-color warning_color_insensitive_breeze alpha(@nb_warning, 0.4);
+@define-color warning_color_insensitive_backdrop_breeze alpha(@nb_warning, 0.4);
+@define-color success_color_breeze @nb_warning;
+@define-color success_color_backdrop_breeze @nb_warning;
+@define-color success_color_insensitive_breeze alpha(@nb_warning, 0.4);
+@define-color success_color_insensitive_backdrop_breeze alpha(@nb_warning, 0.4);
+@define-color print_paper_backdrop_breeze @nb_base;
+
+/* Plain GTK names (overrides the ones noctalia.css sets) */
+@define-color theme_fg_color @nb_window_text;
+@define-color theme_text_color @nb_text;
+@define-color theme_bg_color @nb_window;
+@define-color theme_base_color @nb_base;
+@define-color theme_selected_bg_color @nb_highlight;
+@define-color theme_selected_fg_color @nb_highlight_fg;
+@define-color theme_unfocused_fg_color @nb_window_text;
+@define-color theme_unfocused_text_color @nb_text;
+@define-color theme_unfocused_bg_color @nb_window;
+@define-color theme_unfocused_base_color @nb_base;
+@define-color theme_unfocused_selected_bg_color @nb_highlight;
+@define-color theme_unfocused_selected_fg_color @nb_highlight_fg;
+@define-color insensitive_bg_color @nb_window;
+@define-color insensitive_fg_color @nb_disabled_fg;
+@define-color insensitive_base_color @nb_base;
+@define-color borders @nb_frame;
+@define-color unfocused_borders @nb_frame;
+@define-color content_view_bg @nb_base;
+@define-color text_view_bg @nb_base;
+@define-color error_color @nb_error;
+@define-color warning_color @nb_warning;
+@define-color success_color @nb_warning;
+
+/* ---- libadwaita names (GTK4 apps like Text Editor, Calculator) -------- */
+@define-color accent_color @nb_accent;
+@define-color accent_bg_color @nb_highlight;
+@define-color accent_fg_color @nb_highlight_fg;
+@define-color destructive_bg_color @nb_error;
+@define-color destructive_fg_color @nb_on_error;
+@define-color error_bg_color @nb_error;
+@define-color error_fg_color @nb_on_error;
+@define-color window_bg_color @nb_window;
+@define-color window_fg_color @nb_window_text;
+@define-color view_bg_color @nb_base;
+@define-color view_fg_color @nb_text;
+@define-color headerbar_bg_color @nb_window;
+@define-color headerbar_fg_color @nb_window_text;
+@define-color headerbar_backdrop_color @nb_window;
+@define-color headerbar_border_color @nb_frame;
+@define-color popover_bg_color @nb_window;
+@define-color popover_fg_color @nb_window_text;
+@define-color card_bg_color @nb_button;
+@define-color card_fg_color @nb_button_text;
+@define-color dialog_bg_color @nb_window;
+@define-color dialog_fg_color @nb_window_text;
+@define-color sidebar_bg_color @nb_window;
+@define-color sidebar_fg_color @nb_window_text;
+@define-color sidebar_backdrop_color @nb_window;
+@define-color sidebar_border_color @nb_frame;
+@define-color secondary_sidebar_bg_color @nb_window;
+@define-color secondary_sidebar_fg_color @nb_window_text;
+
+/* ---- Window buttons (minimize / maximize / close) ---------------------
+ * Breeze paints thin glyphs as background images (with broken-looking
+ * filled hover/maximized images) and hides the real icon. Replaced with
+ * breeze-dark icon-theme icons (same as Qt) in palette-colored circles.
+ * GTK3: the button itself is the circle.
+ * GTK4: the button fills the headerbar height, so it is transparent and the
+ *       circle is drawn on its image (libadwaita-style).
+ * window:not(.nb-x):not(.nb-y) is always true; it only adds specificity so
+ * these beat Breeze's ".maximized headerbar ... button.maximize:hover" rules.
+ * Rule order: normal -> backdrop -> hover -> active, so hover also works
+ * on unfocused windows. Generated per class: GTK3 cannot parse :is().
+ */
+
+/* GTK3 */
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close {
+  min-width: 24px;
+  min-height: 24px;
+  margin: 0 3px;
+  padding: 0;
+  border: none;
+  border-radius: 9999px;
+  box-shadow: none;
+  outline: none;
+  background-image: none;
+  background-color: alpha(@nb_window_text, 0.08);
+  color: @nb_window_text;
+  -gtk-icon-shadow: none;
+}
+
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize:backdrop,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize:backdrop,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:backdrop,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize:backdrop,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize:backdrop,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:backdrop,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize:backdrop,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize:backdrop,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:backdrop,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize:backdrop,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize:backdrop,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:backdrop {
+  background-image: none;
+  background-color: alpha(@nb_window_text, 0.05);
+  color: alpha(@nb_window_text, 0.55);
+}
+
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize:hover,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize:backdrop:hover,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize:hover,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize:backdrop:hover,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:hover,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:backdrop:hover,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize:hover,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize:backdrop:hover,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize:hover,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize:backdrop:hover,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:hover,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:backdrop:hover {
+  background-image: none;
+  background-color: alpha(@nb_window_text, 0.18);
+  color: @nb_window_text;
+}
+
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize:active,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize:backdrop:active,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize:active,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize:backdrop:active,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:active,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:backdrop:active,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize:active,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize:backdrop:active,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize:active,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize:backdrop:active,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:active,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize:active,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize:active,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:active,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:backdrop:active {
+  background-image: none;
+  background-color: alpha(@nb_window_text, 0.28);
+  color: @nb_window_text;
+}
+
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:hover,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:backdrop:hover,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:hover,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:backdrop:hover {
+  background-image: none;
+  background-color: @nb_error;
+  color: @nb_on_error;
+}
+
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:active,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:backdrop:active,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:active,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:active,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close:backdrop:active {
+  background-image: none;
+  background-color: shade(@nb_error, 0.8);
+  color: @nb_on_error;
+}
+
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize  image,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize  image,
+window:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close  image,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize  image,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize  image,
+window:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close  image,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.minimize  image,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.maximize  image,
+dialog:not(.nb-x):not(.nb-y) headerbar button.titlebutton.close  image,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.minimize  image,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.maximize  image,
+dialog:not(.nb-x):not(.nb-y) .titlebar button.titlebutton.close  image {
+  color: inherit;
+  -gtk-icon-shadow: none;
+}
+
+/* GTK4 */
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:hover,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:active,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop:hover,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop:active,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:hover,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:active,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop:hover,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop:active,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:hover,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:active,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:hover,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:active,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:hover,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:active,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop:hover,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop:active,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:hover,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:active,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop:hover,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop:active,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:hover,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:active,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:hover,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:active,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:active,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:active,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:active,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:hover,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:active {
+  min-width: 24px;
+  min-height: 24px;
+  margin: 0 2px;
+  padding: 0 1px;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+  background: none;
+  -gtk-icon-shadow: none;
+}
+
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close > image {
+  min-width: 16px;
+  min-height: 16px;
+  padding: 4px;
+  margin: 0;
+  border-radius: 9999px;
+  box-shadow: none;
+  background-image: none;
+  background-color: alpha(@nb_window_text, 0.08);
+  color: @nb_window_text;
+  -gtk-icon-shadow: none;
+}
+
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop > image {
+  background-color: alpha(@nb_window_text, 0.05);
+  color: alpha(@nb_window_text, 0.55);
+}
+
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:hover > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop:hover > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:hover > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop:hover > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:hover > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:hover > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:hover > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop:hover > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:hover > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop:hover > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:hover > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:hover > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:hover > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop:hover > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:hover > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop:hover > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:hover > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:hover > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:hover > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop:hover > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:hover > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop:hover > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:hover > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:hover > image {
+  background-color: alpha(@nb_window_text, 0.18);
+  color: @nb_window_text;
+}
+
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:active > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop:active > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:active > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop:active > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:active > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:active > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:active > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop:active > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:active > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop:active > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:active > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:active > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:active > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.minimize:backdrop:active > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:active > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.maximize:backdrop:active > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:active > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:active > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:active > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.minimize:backdrop:active > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:active > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.maximize:backdrop:active > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:active > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:active > image {
+  background-color: alpha(@nb_window_text, 0.28);
+  color: @nb_window_text;
+}
+
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:hover > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:hover > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:hover > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:hover > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:hover > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:hover > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:hover > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:hover > image {
+  background-color: @nb_error;
+  color: @nb_on_error;
+}
+
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:active > image,
+window:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:active > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:active > image,
+window:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:active > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:active > image,
+dialog:not(.nb-x):not(.nb-y) headerbar windowcontrols button.close:backdrop:active > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:active > image,
+dialog:not(.nb-x):not(.nb-y) .titlebar windowcontrols button.close:backdrop:active > image {
+  background-color: shade(@nb_error, 0.8);
+  color: @nb_on_error;
+}
+

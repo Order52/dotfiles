@@ -26,6 +26,9 @@ Existing configs are backed up to `~/dotfiles-backup-<date>` first. It is safe t
 * **Android phone** (`local-share/noctalia-plugins/androidconnect` + `local-bin/androidconnect`): battery / notifications in the bar,
   a panel to ring, send files, browse, push the clipboard, and mirror / screenshot / record via scrcpy — see [docs/androidconnect.md](docs/androidconnect.md).
 * Terminals (alacritty, kitty, foot, ghostty), fish/zsh/bash, GTK/Qt/Kvantum themes, fastfetch, btop, cava, nvim, micro, mpv, KDE settings.
+* **GTK matches Qt**: GTK3/GTK4 (incl. libadwaita) use Breeze-Dark with colors rendered from the Noctalia wallpaper palette by
+  user templates (`config/noctalia/templates/noctalia-breeze*.css`, same color mapping as Noctalia's qt6ct template), plus round
+  palette-colored minimize/maximize/close buttons. KDE's `gtkconfig` kded module is disabled (`kde/kded6rc`) so it can't overwrite `gtk.css`.
 
 **Hardware: Acer Predator**
 * **`linuwu_sense` driver** (`drivers/`) built through DKMS for every installed kernel, with the compiler the kernel was built with

@@ -154,6 +154,15 @@ wallpaper_scheme = "m3-tonal-spot"
     [theme.templates]
     builtin_ids = [ "btop", "gtk3", "gtk4", "kcolorscheme", "kitty", "qt", "alacritty" ]
 
+    # Breeze GTK colors from the Noctalia palette (see templates/noctalia-breeze.css)
+    [theme.templates.user.noctalia_breeze]
+    input_path = "$XDG_CONFIG_HOME/noctalia/templates/noctalia-breeze.css"
+    output_path = ["$XDG_CONFIG_HOME/gtk-3.0/noctalia-breeze.css", "$XDG_CONFIG_HOME/gtk-4.0/noctalia-breeze.css"]
+
+    [theme.templates.user.noctalia_breeze_vars]
+    input_path = "$XDG_CONFIG_HOME/noctalia/templates/noctalia-breeze-vars.css"
+    output_path = "$XDG_CONFIG_HOME/gtk-4.0/noctalia-breeze-vars.css"
+
 [widget.clock]
 color = "secondary"
 format = "{:%I:%M %p %A %m/%d/%y}"

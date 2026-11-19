@@ -1,0 +1,53 @@
+/*
+ * libadwaita (1.6+) CSS variables from the Noctalia palette.
+ * Noctalia user template: noctalia_breeze_vars -> ~/.config/gtk-4.0/noctalia-breeze-vars.css
+ * Same token mapping as noctalia-breeze.css. GTK4 only (GTK3 cannot parse :root vars).
+ */
+:root {
+    --accent-color: #ffb596;
+    --accent-bg-color: #71361a;
+    --accent-fg-color: #ffdbcd;
+
+    --destructive-color: #ffb4ab;
+    --destructive-bg-color: #ffb4ab;
+    --destructive-fg-color: #690005;
+    --error-color: #ffb4ab;
+    --error-bg-color: #ffb4ab;
+    --error-fg-color: #690005;
+    --warning-color: #d2c78f;
+    --success-color: #d2c78f;
+
+    --window-bg-color: #000000;
+    --window-fg-color: #f1dfd8;
+    --view-bg-color: #000000;
+    --view-fg-color: #f1dfd8;
+
+    --headerbar-bg-color: #000000;
+    --headerbar-fg-color: #f1dfd8;
+    --headerbar-backdrop-color: #000000;
+    --headerbar-border-color: color-mix(in srgb, #f1dfd8 25%, #000000);
+    --headerbar-shade-color: rgb(0 0 0 / 36%);
+
+    --popover-bg-color: #000000;
+    --popover-fg-color: #f1dfd8;
+    --dialog-bg-color: #000000;
+    --dialog-fg-color: #f1dfd8;
+    --card-bg-color: #000000;
+    --card-fg-color: #f1dfd8;
+    --overview-bg-color: #000000;
+    --overview-fg-color: #f1dfd8;
+
+    --sidebar-bg-color: #000000;
+    --sidebar-fg-color: #f1dfd8;
+    --sidebar-backdrop-color: #000000;
+    --sidebar-border-color: color-mix(in srgb, #f1dfd8 25%, #000000);
+    --secondary-sidebar-bg-color: #000000;
+    --secondary-sidebar-fg-color: #f1dfd8;
+    --secondary-sidebar-backdrop-color: #000000;
+    --secondary-sidebar-border-color: color-mix(in srgb, #f1dfd8 25%, #000000);
+
+    --thumbnail-bg-color: #000000;
+    --thumbnail-fg-color: #f1dfd8;
+    --shade-color: rgb(0 0 0 / 36%);
+    --scrollbar-outline-color: rgb(0 0 0 / 50%);
+}

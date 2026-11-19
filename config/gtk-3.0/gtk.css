@@ -1,3 +1,9 @@
-@import 'colors.css';
-
+/*
+ * GTK3 = Breeze-Dark theme (set in settings.ini) + Noctalia palette colors.
+ * Order matters: noctalia-breeze.css must come last.
+ *   noctalia.css  - Noctalia built-in gtk3 template (kept so Noctalia doesn't re-append it)
+ *   noctalia-breeze.css  - Noctalia user template noctalia_breeze (~/.config/noctalia/templates)
+ * kded's gtkconfig module is disabled (kded6rc) so it no longer rewrites this file.
+ */
 @import url("noctalia.css");
+@import url("noctalia-breeze.css");
